@@ -6,6 +6,8 @@
 import cudf
 import numpy as np
 
+cudf.set_allocator("managed")
+
 ### Load datasets
 bureau_balance = cudf.read_csv('data/bureau_balance.csv')
 bureau = cudf.read_csv('data/bureau.csv')
@@ -66,11 +68,23 @@ sum_prev = prev.select_dtypes('number').groupby('SK_ID_CURR') \
 
 sum_prev.columns = ["_".join(x) for x in sum_prev.columns.ravel()]
 
+train_feat = train.drop('TARGET', axis=1) \
+    .merge(avg_bureau, how='left', left_on='SK_ID_CURR', right_on='SK_ID_CURR') \
+    .merge(sum_cc_balance, how='left', left_on='SK_ID_CURR', right_index=True) \
+    .merge(sum_payments, how='left', left_on='SK_ID_CURR', right_on='SK_ID_CURR') \
+    .merge(sum_pc_balance, how='left', left_on='SK_ID_CURR', right_index=True) \
+    .merge(sum_prev, how='left', left_on='SK_ID_CURR', right_index=True) \
+    .drop('SK_ID_CURR', axis=1)
+
+train_feat['DAYS_EMPLOYED'] = train_feat.DAYS_EMPLOYED.map(lambda x: np.nan if x == 365243 else x)
+train_feat['DAYS_EMPLOYED_PERC'] = np.sqrt(train_feat.DAYS_EMPLOYED / train_feat.DAYS_BIRTH)
+train_feat['INCOME_CREDIT_PERC'] = train_feat.AMT_INCOME_TOTAL / train_feat.AMT_CREDIT
+train_feat['INCOME_PER_PERSON'] = np.log1p(train_feat.AMT_INCOME_TOTAL / train_feat.CNT_FAM_MEMBERS)
 
 
 ## Outputs - to write out
-avg_bureau.to_pandas().to_parquet(path='data_eng/avg_bureau.parq')
-sum_cc_balance.to_pandas().to_parquet(path='data_eng/sum_cc_balance.parq')
-sum_payments.to_pandas().to_parquet(path='data_eng/sum_payments.parq')
-sum_pc_balance.to_pandas().to_parquet(path='data_eng/sum_pc_balance.parq')
-sum_prev.to_pandas().to_parquet(path='data_eng/sum_prev.parq')
+#avg_bureau.to_pandas().to_parquet(path='data_eng/avg_bureau.parq')
+#sum_cc_balance.to_pandas().to_parquet(path='data_eng/sum_cc_balance.parq')
+#sum_payments.to_pandas().to_parquet(path='data_eng/sum_payments.parq')
+#sum_pc_balance.to_pandas().to_parquet(path='data_eng/sum_pc_balance.parq')
+#sum_prev.to_pandas().to_parquet(path='data_eng/sum_prev.parq')
