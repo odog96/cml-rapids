@@ -6,6 +6,8 @@
 import cudf
 import numpy as np
 
+## activate auto memory management
+## allows for spill
 cudf.set_allocator("managed")
 
 ### Load datasets
