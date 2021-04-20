@@ -2,6 +2,7 @@
 
 import numpy as np
 import cudf as dd
+import gc
 
 ## activate auto memory management
 ## allows for spill
@@ -31,6 +32,7 @@ def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance
 
     # free up gpu ram
     del(bureau_balance)
+    gc.collect()
 
     print("procecssing cc balance")
 
@@ -43,6 +45,7 @@ def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance
 
     # free up gpu ram
     del(cc_balance)
+    gc.collect()
 
     print("procecssing bureau")
 
@@ -51,9 +54,12 @@ def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance
                               left_on='SK_ID_BUREAU', 
                               right_index=True)
 
+    avg_bureau.set_index('SK_ID_CURR')
+
     ## free up gpu ram
     del(bureau)
     del(avg_bbalance)
+    gc.collect()
 
     print("procecssing payments")
 
@@ -66,7 +72,10 @@ def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance
     sum_payments['DPD'] = sum_payments['DPD']
     sum_payments['DBD'] = sum_payments['DBD']
 
+    sum_payments.set_index('SK_ID_CURR')
+
     del(payments)
+    gc.collect()
 
     print("processing pc_balance")
 
@@ -78,17 +87,18 @@ def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance
 
     # free up gpu ram
     del(pc_balance)
+    gc.collect()
 
     print("processing prev table")
 
     ## Build Sum_Prev
     prev = prev.drop('SK_ID_PREV', axis=1)
-    prev.DAYS_FIRST_DRAWING = prev.DAYS_FIRST_DRAWING.map(lambda x: np.nan if x == 365243 else x)
-    prev.DAYS_FIRST_DUE = prev.DAYS_FIRST_DUE.map(lambda x: np.nan if x == 365243 else x)
-    prev.DAYS_LAST_DUE_1ST_VERSION = prev.DAYS_LAST_DUE_1ST_VERSION.map(lambda x: np.nan if x == 365243 else x)
-    prev.DAYS_LAST_DUE = prev.DAYS_LAST_DUE.map(lambda x: np.nan if x == 365243 else x)
-    prev.DAYS_TERMINATION = prev.DAYS_TERMINATION.map(lambda x: np.nan if x == 365243 else x)
-    prev.APP_CREDIT_PERC = prev.AMT_APPLICATION / prev.AMT_CREDIT
+    prev['DAYS_FIRST_DRAWING'] = prev.DAYS_FIRST_DRAWING.map(lambda x: np.nan if x == 365243 else x)
+    prev['DAYS_FIRST_DUE'] = prev.DAYS_FIRST_DUE.map(lambda x: np.nan if x == 365243 else x)
+    prev['DAYS_LAST_DUE_1ST_VERSION'] = prev.DAYS_LAST_DUE_1ST_VERSION.map(lambda x: np.nan if x == 365243 else x)
+    prev['DAYS_LAST_DUE'] = prev.DAYS_LAST_DUE.map(lambda x: np.nan if x == 365243 else x)
+    prev['DAYS_TERMINATION'] = prev.DAYS_TERMINATION.map(lambda x: np.nan if x == 365243 else x)
+    prev['APP_CREDIT_PERC'] = prev.AMT_APPLICATION / prev.AMT_CREDIT
 
     sum_prev = prev.select_dtypes('number').groupby('SK_ID_CURR') \
                 .agg(agg_func)
@@ -97,30 +107,34 @@ def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance
 
     # free up gpu ram
     del(prev)
+    gc.collect()
 
-    print("merging train feats")
+    print("merging train feats - part1")
+
+    train.set_index('SK_ID_CURR')
 
     train_feat = train.drop('TARGET', axis=1) \
-        .merge(avg_bureau, how='left', left_on='SK_ID_CURR', right_on='SK_ID_CURR') \
-        .merge(sum_cc_balance, how='left', left_on='SK_ID_CURR', right_index=True) \
-        .merge(sum_payments, how='left', left_on='SK_ID_CURR', right_on='SK_ID_CURR') \
-        .merge(sum_pc_balance, how='left', left_on='SK_ID_CURR', right_index=True) \
-        .merge(sum_prev, how='left', left_on='SK_ID_CURR', right_index=True) \
-        .drop('SK_ID_CURR', axis=1)
+        .merge(avg_bureau, how='left', left_index=True, right_index=True) \
+        .merge(sum_cc_balance, how='left', left_index=True, right_index=True) \
+        .merge(sum_payments, how='left', left_index=True, right_index=True) \
+        .merge(sum_pc_balance, how='left', left_index=True, right_index=True) \
+        .merge(sum_prev, how='left', left_index=True, right_index=True) \
+        #.drop('SK_ID_CURR', axis=1)
+
+    #del(sum_pc_balance)
+    #del(sum_prev)
+    #gc.collect()
+
+    print("extra feats")
 
     train_feat['DAYS_EMPLOYED'] = train_feat.DAYS_EMPLOYED.map(lambda x: np.nan if x == 365243 else x)
     train_feat['DAYS_EMPLOYED_PERC'] = np.sqrt(train_feat.DAYS_EMPLOYED / train_feat.DAYS_BIRTH)
     train_feat['INCOME_CREDIT_PERC'] = train_feat.AMT_INCOME_TOTAL / train_feat.AMT_CREDIT
     train_feat['INCOME_PER_PERSON'] = np.log1p(train_feat.AMT_INCOME_TOTAL / train_feat.CNT_FAM_MEMBERS)
 
-    print("writing out data")
+    print("feats done")
 
-    ## Outputs - to write out
-    avg_bureau.to_parquet(path='data_eng/avg_bureau')
-    sum_cc_balance.to_parquet(path='data_eng/sum_cc_balance')
-    sum_payments.to_parquet(path='data_eng/sum_payments')
-    sum_pc_balance.to_parquet(path='data_eng/sum_pc_balance')
-    sum_prev.to_parquet(path='data_eng/sum_prev')
+    return avg_bureau, sum_cc_balance, sum_payments, sum_pc_balance, sum_prev, train_feat
 
 
 if __name__ == '__main__':
@@ -139,5 +153,13 @@ if __name__ == '__main__':
 
     print("starting processing")
 
-    feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance,
+    avg_bureau, sum_cc_balance, sum_payments, sum_pc_balance, sum_prev, train_feat = feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance,
                         prev, train, test)
+
+    avg_bureau.to_parquet(path='data_eng/avg_bureau')
+    sum_cc_balance.to_parquet(path='data_eng/sum_cc_balance')
+    sum_payments.to_parquet(path='data_eng/sum_payments')
+    sum_pc_balance.to_parquet(path='data_eng/sum_pc_balance')
+    sum_prev.to_parquet(path='data_eng/sum_prev')
+    train_feat.to_parquet(path='data_eng/train_feat')
+
