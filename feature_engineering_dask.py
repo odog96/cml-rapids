@@ -4,7 +4,7 @@ import time
 
 from dask.distributed import Client
 from dask_cuda import LocalCUDACluster
-import dask_cudf
+import dask_cudf as dd
 from feature_engineering import feature_engineering
 
 cluster = LocalCUDACluster()
@@ -12,16 +12,35 @@ client = Client(cluster)
 client
 
 ### Load Data
-bureau_balance = dask_cudf.read_csv('data/bureau_balance.csv')
-bureau = dask_cudf.read_csv('data/bureau.csv')
-cc_balance = dask_cudf.read_csv('data/credit_card_balance.csv')
-payments = dask_cudf.read_csv('data/installments_payments.csv')
-pc_balance = dask_cudf.read_csv('data/POS_CASH_balance.csv')
-prev = dask_cudf.read_csv('data/previous_application.csv')
-train = dask_cudf.read_csv('data/application_train.csv')
-test = dask_cudf.read_csv('data/application_test.csv')
+bureau_balance = dd.read_parquet('raw_data/bureau_balance.parquet')
+bureau = dd.read_parquet('raw_data/bureau.parquet')
+cc_balance = dd.read_parquet('raw_data/cc_balance.parquet')
+payments = dd.read_parquet('raw_data/payments.parquet')
+pc_balance = dd.read_parquet('raw_data/pc_balance.parquet')
+prev = dd.read_parquet('raw_data/prev.parquet')
+train = dd.read_parquet('raw_data/train.parquet')
+test = dd.read_parquet('raw_data/test.parquet')
 
-feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance,
-                        prev, train, test)
+train_target = train['TARGET']
+unified = dd.concat([train.drop('TARGET', axis=1), test])
+
+avg_bureau, sum_cc_balance, sum_payments, \
+    sum_pc_balance, sum_prev, unified_feat = feature_engineering(bureau_balance,
+        bureau, cc_balance, payments, pc_balance,
+        prev, unified)
+
+train_rows = train.shape
+train_feats = unified_feat.iloc[:307511].merge(train_target, how='left', 
+                                           left_index=True, right_index=True)
+test_feats = unified_feat.iloc[307511:]
+
+avg_bureau.to_parquet(path='data_eng/avg_bureau')
+sum_cc_balance.to_parquet(path='data_eng/sum_cc_balance')
+sum_payments.to_parquet(path='data_eng/sum_payments')
+sum_pc_balance.to_parquet(path='data_eng/sum_pc_balance')
+sum_prev.to_parquet(path='data_eng/sum_prev')
+
+train_feats.to_parquet('data_eng/feats/train_feats.parquet')
+test_feats.to_parquet('data_eng/feats/test_feats.parquet')
 
 client.close()
