@@ -1,8 +1,7 @@
 ### Data Engineering Job
 
-import numpy as np
+#import numpy as np
 import cudf as dd
-import gc
 
 ## activate auto memory management
 ## allows for spill
@@ -10,7 +9,7 @@ import gc
 
 
 def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance,
-                        prev, train, test):
+                        prev, unified):
     """
 
     Feature engineering script to process our data
@@ -18,6 +17,8 @@ def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance
     different functions easier
 
     """
+    import numpy as np
+    import gc
 
     ## aggregation functions for our groupings
     agg_func = ['mean', 'max', 'min', 'sum', 'std']
@@ -105,15 +106,18 @@ def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance
 
     sum_prev.columns = ["_".join(x) for x in sum_prev.columns.ravel()]
 
+    # dask test - WIP
+    #sum_prev.compute()
+
     # free up gpu ram
     del(prev)
     gc.collect()
 
-    print("merging train feats - part1")
+    print("merging feats into train and test - part1")
 
-    train.set_index('SK_ID_CURR')
+    #train.set_index('SK_ID_CURR')
 
-    train_feat = train.drop('TARGET', axis=1) \
+    feats = unified \
         .merge(avg_bureau, how='left', left_index=True, right_index=True) \
         .merge(sum_cc_balance, how='left', left_index=True, right_index=True) \
         .merge(sum_payments, how='left', left_index=True, right_index=True) \
@@ -127,14 +131,21 @@ def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance
 
     print("extra feats")
 
-    train_feat['DAYS_EMPLOYED'] = train_feat.DAYS_EMPLOYED.map(lambda x: np.nan if x == 365243 else x)
-    train_feat['DAYS_EMPLOYED_PERC'] = np.sqrt(train_feat.DAYS_EMPLOYED / train_feat.DAYS_BIRTH)
-    train_feat['INCOME_CREDIT_PERC'] = train_feat.AMT_INCOME_TOTAL / train_feat.AMT_CREDIT
-    train_feat['INCOME_PER_PERSON'] = np.log1p(train_feat.AMT_INCOME_TOTAL / train_feat.CNT_FAM_MEMBERS)
+    feats['DAYS_EMPLOYED'] = feats.DAYS_EMPLOYED.map(lambda x: np.nan if x == 365243 else x)
+    feats['DAYS_EMPLOYED_PERC'] = np.sqrt(feats.DAYS_EMPLOYED / feats.DAYS_BIRTH)
+    feats['INCOME_CREDIT_PERC'] = feats.AMT_INCOME_TOTAL / feats.AMT_CREDIT
+    
+    # need to debug this
+    #train_feat['INCOME_PER_PERSON'] = np.log1p(train_feat.AMT_INCOME_TOTAL / train_feat.CNT_FAM_MEMBERS)
 
     print("feats done")
 
-    return avg_bureau, sum_cc_balance, sum_payments, sum_pc_balance, sum_prev, train_feat
+    #train_feat = feats[]
+
+    # dask test - WIP
+    #train_feat.compute()
+
+    return avg_bureau, sum_cc_balance, sum_payments, sum_pc_balance, sum_prev, feats
 
 
 if __name__ == '__main__':
@@ -142,24 +153,37 @@ if __name__ == '__main__':
     ### Load datasets
     print("loading data")
 
-    bureau_balance = dd.read_csv('data/bureau_balance.csv')
-    bureau = dd.read_csv('data/bureau.csv')
-    cc_balance = dd.read_csv('data/credit_card_balance.csv')
-    payments = dd.read_csv('data/installments_payments.csv')
-    pc_balance = dd.read_csv('data/POS_CASH_balance.csv')
-    prev = dd.read_csv('data/previous_application.csv')
-    train = dd.read_csv('data/application_train.csv')
-    test = dd.read_csv('data/application_test.csv')
+    bureau_balance = dd.read_parquet('raw_data/bureau_balance.parquet')
+    bureau = dd.read_parquet('raw_data/bureau.parquet')
+    cc_balance = dd.read_parquet('raw_data/cc_balance.parquet')
+    payments = dd.read_parquet('raw_data/payments.parquet')
+    pc_balance = dd.read_parquet('raw_data/pc_balance.parquet')
+    prev = dd.read_parquet('raw_data/prev.parquet')
+    train = dd.read_parquet('raw_data/train.parquet')
+    test = dd.read_parquet('raw_data/test.parquet')
+
+    train_target = train['TARGET']
+    unified = dd.concat([train.drop('TARGET', axis=1), test])
 
     print("starting processing")
 
-    avg_bureau, sum_cc_balance, sum_payments, sum_pc_balance, sum_prev, train_feat = feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance,
-                        prev, train, test)
+    avg_bureau, sum_cc_balance, sum_payments, \
+        sum_pc_balance, sum_prev, unified_feat = feature_engineering(bureau_balance, bureau, 
+                                                    cc_balance, payments, pc_balance,
+                                                    prev, unified)
+
+    train_rows = train.shape
+
+    train_feats = unified_feat.iloc[:307511].merge(train_target, how='left', 
+                                               left_index=True, right_index=True)
+
+    test_feats = unified_feat.iloc[307511:]
 
     avg_bureau.to_parquet(path='data_eng/avg_bureau')
     sum_cc_balance.to_parquet(path='data_eng/sum_cc_balance')
     sum_payments.to_parquet(path='data_eng/sum_payments')
     sum_pc_balance.to_parquet(path='data_eng/sum_pc_balance')
     sum_prev.to_parquet(path='data_eng/sum_prev')
-    train_feat.to_parquet(path='data_eng/train_feat')
-
+    
+    train_feats.to_parquet('data_eng/feats/train_feats.parquet')
+    test_feats.to_parquet('data_eng/feats/test_feats.parquet')

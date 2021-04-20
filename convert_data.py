@@ -97,4 +97,4 @@ test = dd.read_csv('data/application_test.csv',
                           'AMT_REQ_CREDIT_BUREAU_YEAR': 'Int64'})
 test.FLAG_OWN_CAR = test.FLAG_OWN_CAR.eq('Y').mul(1).astype('bool')
 test.FLAG_OWN_REALTY = test.FLAG_OWN_REALTY.eq('Y').mul(1).astype('bool')
-test.to_parquet('raw_data/train.parquet')
+test.to_parquet('raw_data/test.parquet')

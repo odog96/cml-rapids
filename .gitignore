@@ -1,1 +1,6 @@
 data/*.csv
+.ipynb_checkpoints/*
+__pycache__/*
+dask-worker-space/*
+data_eng/*
+raw_data/*
