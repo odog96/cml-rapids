@@ -1,14 +1,21 @@
 ### Data Engineering Job
 
-#import numpy as np
 import cudf as dd
 import numpy as np
 import gc
-## activate auto memory management
-## allows for spill
-#cudf.set_allocator("managed")
 
 def process_bureau_balance(bureau_balance, agg_func):
+    """
+
+    this script processes the bureau balance table and produces a set of feature for merging back with the main training table
+    Args:
+        bureau_balance (dataframe): The Bureau Balance table as a DataFrame cudf or pandas is okay
+        agg_func (list): List of functions for aggregating the numeric values into one line item per SK_ID_BUREAU 
+
+    Returns:
+        avg_bbalance (dataframe): The processed dataframe for the next step
+
+    """
 
     avg_bbalance = bureau_balance.select_dtypes('number') \
                     .groupby('SK_ID_BUREAU').agg(agg_func)
@@ -23,7 +30,19 @@ def process_bureau_balance(bureau_balance, agg_func):
     return avg_bbalance
 
 def process_cc_balance(cc_balance, agg_func):
-        ## fill nulls for cc_balance
+    """
+
+    this script processes the credit card balance table and produces a set of feature for merging back with the main training table
+    Args:
+        cc_balance (dataframe): The credit card Balance table as a DataFrame cudf or pandas is okay
+        agg_func (list): List of functions for aggregating the numeric values into one line item per SK_ID_BUREAU 
+
+    Returns:
+        sum_cc_balance (dataframe): The processed dataframe for the next step
+
+    """
+    
+    ## fill nulls for cc_balance
     cc_balance['AMT_DRAWINGS_ATM_CURRENT'].fillna(0, inplace=True)
     cc_balance['AMT_DRAWINGS_OTHER_CURRENT'].fillna(0, inplace=True)
     cc_balance['AMT_DRAWINGS_POS_CURRENT'].fillna(0, inplace=True)
@@ -84,6 +103,17 @@ def process_cc_balance(cc_balance, agg_func):
     return sum_cc_balance
 
 def process_prev(prev, agg_func):
+    """
+
+    this script processes the Previous Loan table and produces a set of feature for merging back with the main training table
+    Args:
+        prev (dataframe): The credit card Balance table as a DataFrame cudf or pandas is okay
+        agg_func (list): List of functions for aggregating the numeric values into one line item per SK_ID_BUREAU 
+
+    Returns:
+        sum_prev (dataframe): The processed dataframe for the next step
+
+    """
 
     prev = prev.drop('SK_ID_PREV', axis=1)
     prev['NFLAG_INSURED_ON_APPROVAL'] = prev['NFLAG_INSURED_ON_APPROVAL'].astype('object')
@@ -123,9 +153,6 @@ def process_prev(prev, agg_func):
     sum_prev.columns = ["_".join(x) for x in sum_prev.columns.ravel()]
 
     # these are all the std columns so all good
-    # to arrow is only needed for cudf .to_arrow()
-    #for column in sum_prev.isnull().any()[sum_prev.isnull().any()==True].index.to_arrow().tolist():
-    #    sum_prev[column].fillna(0, inplace=True)
     sum_prev['AMT_ANNUITY_std'].fillna(0, inplace=True)
     sum_prev['AMT_APPLICATION_std'].fillna(0, inplace=True)
     sum_prev['AMT_CREDIT_std'].fillna(0, inplace=True)
@@ -170,9 +197,6 @@ def process_prev(prev, agg_func):
     sum_prev['APP_CREDIT_PERC_sum'].fillna(0, inplace=True)
     sum_prev['APP_CREDIT_PERC_std'].fillna(0, inplace=True)
 
-    # dask test - WIP
-    #sum_prev.compute()
-
     # free up gpu ram
     del(prev)
     gc.collect()
@@ -180,6 +204,16 @@ def process_prev(prev, agg_func):
     return sum_prev
 
 def process_unified(unified):
+    """
+
+    this script processes the Unified table and produces a set of feature for merging back with the main training table
+    Args:
+        unified (dataframe): The unified train and test table as a DataFrame cudf or pandas is okay
+        
+    Returns:
+        unified (dataframe): The processed dataframe for the next step
+
+    """
 
     bulk_fill = ['AMT_ANNUITY', 'AMT_GOODS_PRICE', 'EXT_SOURCE_1', 'EXT_SOURCE_2',
         'EXT_SOURCE_3', 'APARTMENTS_AVG', 'BASEMENTAREA_AVG', 'YEARS_BEGINEXPLUATATION_AVG',
@@ -234,31 +268,19 @@ def process_unified(unified):
 
     return unified
 
-def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance,
-                        prev, unified):
+def process_bureau(bureau, avg_bbalance):
     """
 
-    Feature engineering script to process our data
-    we split this into it's own function so that we can use it across 
-    different functions easier
+    this script processes the bureau table and merges it with the avg_bbalance table
+    Args:
+        bureau (dataframe): the raw bureau table
+        avg_bbalance (dataframe): the munged bureau balance table
+
+    Returns:
+        avg_bureau (dataframe): The processed Avg bureau Table
 
     """
 
-    ## aggregation functions for our groupings
-    agg_func = ['mean', 'max', 'min', 'sum', 'std']
-
-    print("procecssing bureau balance")
-
-    avg_bbalance = process_bureau_balance(bureau_balance, agg_func)
-
-    print("procecssing cc balance")
-
-    sum_cc_balance = process_cc_balance(cc_balance, agg_func)
-
-    print("procecssing bureau")
-
-    ## Build Avg Bureau table
-    
     # fill nulls for bureau
     bureau['DAYS_CREDIT_ENDDATE'] = bureau['DAYS_CREDIT_ENDDATE'].fillna(0)
     bureau['DAYS_ENDDATE_FACT'] = bureau['DAYS_ENDDATE_FACT'].fillna(0)
@@ -285,7 +307,20 @@ def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance
     del(avg_bbalance)
     gc.collect()
 
-    print("procecssing payments")
+    return avg_bureau
+
+def process_payments(payments, agg_func):
+    """
+
+    this script processes the Payments table and produces a set of feature for merging back with the main training table
+    Args:
+        payments (dataframe): The Payments table as a DataFrame cudf or pandas is okay
+        agg_func (list): List of functions for aggregating the numeric values into one line item per SK_ID_BUREAU 
+
+    Returns:
+        sum_payments (dataframe): The processed dataframe for the next step
+
+    """
 
     payments['DAYS_ENTRY_PAYMENT'] = payments['DAYS_ENTRY_PAYMENT'].fillna(0)
     payments['AMT_PAYMENT'] = payments['AMT_PAYMENT'].fillna(0)
@@ -327,11 +362,21 @@ def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance
     del(payments)
     gc.collect()
 
-    print("processing pc_balance")
+    return sum_payments
 
-    ## Build Sum_PC_Balance
+def process_pc_balance(pc_balance, agg_func):
+    """
 
-    ## fill nulls - fill 0 is fine as that means we don't owe other credit
+    this script processes the POS Cash table and produces a set of feature for merging back with the main training table
+    Args:
+        payments (dataframe): The POS Cash table as a DataFrame cudf or pandas is okay
+        agg_func (list): List of functions for aggregating the numeric values into one line item per SK_ID_BUREAU 
+
+    Returns:
+        sum_pc_balance (dataframe): The processed dataframe for the next step
+
+    """
+
     pc_balance['CNT_INSTALMENT'] = pc_balance['CNT_INSTALMENT'].fillna(0)
     pc_balance['CNT_INSTALMENT'] = pc_balance['CNT_INSTALMENT_FUTURE'].fillna(0)
 
@@ -353,6 +398,61 @@ def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance
     # free up gpu ram
     del(pc_balance)
     gc.collect()
+
+    return sum_pc_balance
+
+def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance,
+                        prev, unified):
+    """
+
+    Feature engineering script to process our data
+    we split this into it's own function so that we can use it across 
+    different backends easier. The transformations for the respective tables are also in their own functions for testing purposes
+
+    Args:
+        bureau_balance (dataframe): The raw bureau balance table loaded into a dataframe Pandas/CuDF / Dask_cudf(pending)
+        bureau (dataframe): The raw bureau table loaded into a dataframe Pandas/CuDF / Dask_cudf(pending)
+        cc_balance (dataframe): The raw credit card balance table loaded into a dataframe Pandas/CuDF / Dask_cudf(pending)
+        payments (dataframe): The raw payments table loaded into a dataframe Pandas/CuDF / Dask_cudf(pending)
+        pc_balance (dataframe): The raw POS Cash balance table loaded into a dataframe Pandas/CuDF / Dask_cudf(pending)
+        prev (dataframe): The raw previous loan table loaded into a dataframe Pandas/CuDF / Dask_cudf(pending)
+        unified (dataframe): The raw unified train / test table loaded into a dataframe Pandas/CuDF / Dask_cudf(pending)
+
+    Returns
+        avg_bureau (dataframe): The processed avg_bureau table as a dataframe object
+        sum_cc_balance (dataframe): The processed sum_cc_balance table as a dataframe object
+        sum_payments (dataframe): The processed sum_payments table as a dataframe object
+        sum_pc_balance (dataframe): The processed sum_pc_balance table as a dataframe object
+        sum_prev (dataframe): The processed sum_prev table as a dataframe object
+        feats (dataframe): The processed feats table as a dataframe object
+
+    """
+
+    ## aggregation functions for our groupings
+    agg_func = ['mean', 'max', 'min', 'sum', 'std']
+
+    print("procecssing bureau balance")
+
+    avg_bbalance = process_bureau_balance(bureau_balance, agg_func)
+
+    print("procecssing cc balance")
+
+    sum_cc_balance = process_cc_balance(cc_balance, agg_func)
+
+    print("procecssing bureau")
+
+    ## Build Avg Bureau table
+    avg_bureau = process_bureau(bureau, avg_bbalance)
+
+    print("procecssing payments")
+
+    sum_payments = process_payments(payments, agg_func)
+
+    print("processing pc_balance")
+
+    ## Build Sum_PC_Balance
+
+    sum_pc_balance = process_pc_balance(pc_balance, agg_func)
 
     print("processing prev table")
 
@@ -381,11 +481,6 @@ def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance
         .merge(sum_payments, how='left', left_index=True, right_index=True) \
         .merge(sum_pc_balance, how='left', left_index=True, right_index=True) \
         .merge(sum_prev, how='left', left_index=True, right_index=True) \
-        #.drop('SK_ID_CURR', axis=1)
-
-    #del(sum_pc_balance)
-    #del(sum_prev)
-    #gc.collect()
 
     print("extra feats")
 
@@ -416,192 +511,42 @@ def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance
                    'CNT_DRAWINGS_CURRENT_mean','CNT_DRAWINGS_CURRENT_max','CNT_DRAWINGS_CURRENT_min','CNT_DRAWINGS_CURRENT_sum','CNT_DRAWINGS_CURRENT_std',
                    'CNT_DRAWINGS_OTHER_CURRENT_mean','CNT_DRAWINGS_OTHER_CURRENT_max','CNT_DRAWINGS_OTHER_CURRENT_min','CNT_DRAWINGS_OTHER_CURRENT_sum','CNT_DRAWINGS_OTHER_CURRENT_std',
                    'CNT_DRAWINGS_POS_CURRENT_mean','CNT_DRAWINGS_POS_CURRENT_max','CNT_DRAWINGS_POS_CURRENT_min','CNT_DRAWINGS_POS_CURRENT_sum','CNT_DRAWINGS_POS_CURRENT_std',
-                   'CNT_INSTALMENT_MATURE_CUM_mean',
-                   'CNT_INSTALMENT_MATURE_CUM_max',
-                   'CNT_INSTALMENT_MATURE_CUM_min',
-                   'CNT_INSTALMENT_MATURE_CUM_sum',
-                   'CNT_INSTALMENT_MATURE_CUM_std',
-                   'SK_DPD_mean_x',
-                   'SK_DPD_max_x',
-                   'SK_DPD_min_x',
-                   'SK_DPD_sum_x',
-                   'SK_DPD_std_x',
-                   'SK_DPD_DEF_mean_x',
-                   'SK_DPD_DEF_max_x',
-                   'SK_DPD_DEF_min_x',
-                   'SK_DPD_DEF_sum_x',
-                   'SK_DPD_DEF_std_x',
-                   'NUM_INSTALMENT_VERSION_mean',
-                   'NUM_INSTALMENT_VERSION_max',
-                   'NUM_INSTALMENT_VERSION_min',
-                   'NUM_INSTALMENT_VERSION_sum',
-                   'NUM_INSTALMENT_VERSION_std',
-                   'NUM_INSTALMENT_NUMBER_mean',
-                   'NUM_INSTALMENT_NUMBER_max',
-                   'NUM_INSTALMENT_NUMBER_min',
-                   'NUM_INSTALMENT_NUMBER_sum',
-                   'NUM_INSTALMENT_NUMBER_std',
-                   'DAYS_INSTALMENT_mean',
-                   'DAYS_INSTALMENT_max',
-                   'DAYS_INSTALMENT_min',
-                   'DAYS_INSTALMENT_sum',
-                   'DAYS_INSTALMENT_std',
-                   'DAYS_ENTRY_PAYMENT_mean',
-                   'DAYS_ENTRY_PAYMENT_max',
-                   'DAYS_ENTRY_PAYMENT_min',
-                   'DAYS_ENTRY_PAYMENT_sum',
-                   'DAYS_ENTRY_PAYMENT_std',
-                   'AMT_INSTALMENT_mean',
-                   'AMT_INSTALMENT_max',
-                   'AMT_INSTALMENT_min',
-                   'AMT_INSTALMENT_sum',
-                   'AMT_INSTALMENT_std',
-                   'AMT_PAYMENT_mean',
-                   'AMT_PAYMENT_max',
-                   'AMT_PAYMENT_min',
-                   'AMT_PAYMENT_sum',
-                   'AMT_PAYMENT_std',
-                   'PAYMENT_PERC_mean',
-                   'PAYMENT_PERC_max',
-                   'PAYMENT_PERC_min',
-                   'PAYMENT_PERC_sum',
-                   'PAYMENT_PERC_std',
-                   'PAYMENT_DIFF_mean',
-                   'PAYMENT_DIFF_max',
-                   'PAYMENT_DIFF_min',
-                   'PAYMENT_DIFF_sum',
-                   'PAYMENT_DIFF_std',
-                   'DPD_mean',
-                   'DPD_max',
-                   'DPD_min',
-                   'DPD_sum',
-                   'DPD_std',
-                   'DBD_mean',
-                   'DBD_max',
-                   'DBD_min',
-                   'DBD_sum',
-                   'DBD_std',
-                   'MONTHS_BALANCE_mean',
-                   'MONTHS_BALANCE_max',
-                   'MONTHS_BALANCE_min',
-                   'MONTHS_BALANCE_sum',
-                   'MONTHS_BALANCE_std',
-                   'CNT_INSTALMENT_mean',
-                   'CNT_INSTALMENT_max',
-                   'CNT_INSTALMENT_min',
-                   'CNT_INSTALMENT_sum',
-                   'CNT_INSTALMENT_std',
-                   'CNT_INSTALMENT_FUTURE_mean',
-                   'CNT_INSTALMENT_FUTURE_max',
-                   'CNT_INSTALMENT_FUTURE_min',
-                   'CNT_INSTALMENT_FUTURE_sum',
-                   'CNT_INSTALMENT_FUTURE_std',
-                   'SK_DPD_mean_y',
-                   'SK_DPD_max_y',
-                   'SK_DPD_min_y',
-                   'SK_DPD_sum_y',
-                   'SK_DPD_std_y',
-                   'SK_DPD_DEF_mean_y',
-                   'SK_DPD_DEF_max_y',
-                   'SK_DPD_DEF_min_y',
-                   'SK_DPD_DEF_sum_y',
-                   'SK_DPD_DEF_std_y',
-                   'AMT_ANNUITY_mean',
-                   'AMT_ANNUITY_max',
-                   'AMT_ANNUITY_min',
-                   'AMT_ANNUITY_sum',
-                   'AMT_ANNUITY_std',
-                   'AMT_APPLICATION_mean',
-                   'AMT_APPLICATION_max',
-                   'AMT_APPLICATION_min',
-                   'AMT_APPLICATION_sum',
-                   'AMT_APPLICATION_std',
-                   'AMT_CREDIT_mean',
-                   'AMT_CREDIT_max',
-                   'AMT_CREDIT_min',
-                   'AMT_CREDIT_sum',
-                   'AMT_CREDIT_std',
-                   'AMT_DOWN_PAYMENT_mean',
-                   'AMT_DOWN_PAYMENT_max',
-                   'AMT_DOWN_PAYMENT_min',
-                   'AMT_DOWN_PAYMENT_sum',
-                   'AMT_DOWN_PAYMENT_std',
-                   'AMT_GOODS_PRICE_mean',
-                   'AMT_GOODS_PRICE_max',
-                   'AMT_GOODS_PRICE_min',
-                   'AMT_GOODS_PRICE_sum',
-                   'AMT_GOODS_PRICE_std',
-                   'HOUR_APPR_PROCESS_START_mean',
-                   'HOUR_APPR_PROCESS_START_max',
-                   'HOUR_APPR_PROCESS_START_min',
-                   'HOUR_APPR_PROCESS_START_sum',
-                   'HOUR_APPR_PROCESS_START_std',
-                   'NFLAG_LAST_APPL_IN_DAY_mean',
-                   'NFLAG_LAST_APPL_IN_DAY_max',
-                   'NFLAG_LAST_APPL_IN_DAY_min',
-                   'NFLAG_LAST_APPL_IN_DAY_sum',
-                   'NFLAG_LAST_APPL_IN_DAY_std',
-                   'RATE_DOWN_PAYMENT_mean',
-                   'RATE_DOWN_PAYMENT_max',
-                   'RATE_DOWN_PAYMENT_min',
-                   'RATE_DOWN_PAYMENT_sum',
-                   'RATE_DOWN_PAYMENT_std',
-                   'RATE_INTEREST_PRIMARY_mean',
-                   'RATE_INTEREST_PRIMARY_max',
-                   'RATE_INTEREST_PRIMARY_min',
-                   'RATE_INTEREST_PRIMARY_sum',
-                   'RATE_INTEREST_PRIMARY_std',
-                   'RATE_INTEREST_PRIVILEGED_mean',
-                   'RATE_INTEREST_PRIVILEGED_max',
-                   'RATE_INTEREST_PRIVILEGED_min',
-                   'RATE_INTEREST_PRIVILEGED_sum',
-                   'RATE_INTEREST_PRIVILEGED_std',
-                   'DAYS_DECISION_mean',
-                   'DAYS_DECISION_max',
-                   'DAYS_DECISION_min',
-                   'DAYS_DECISION_sum',
-                   'DAYS_DECISION_std',
-                   'SELLERPLACE_AREA_mean',
-                   'SELLERPLACE_AREA_max',
-                   'SELLERPLACE_AREA_min',
-                   'SELLERPLACE_AREA_sum',
-                   'SELLERPLACE_AREA_std',
-                   'CNT_PAYMENT_mean',
-                   'CNT_PAYMENT_max',
-                   'CNT_PAYMENT_min',
-                   'CNT_PAYMENT_sum',
-                   'CNT_PAYMENT_std',
-                   'DAYS_FIRST_DRAWING_mean',
-                   'DAYS_FIRST_DRAWING_max',
-                   'DAYS_FIRST_DRAWING_min',
-                   'DAYS_FIRST_DRAWING_sum',
-                   'DAYS_FIRST_DRAWING_std',
-                   'DAYS_FIRST_DUE_mean',
-                   'DAYS_FIRST_DUE_max',
-                   'DAYS_FIRST_DUE_min',
-                   'DAYS_FIRST_DUE_sum',
-                   'DAYS_FIRST_DUE_std',
-                   'DAYS_LAST_DUE_1ST_VERSION_mean',
-                   'DAYS_LAST_DUE_1ST_VERSION_max',
-                   'DAYS_LAST_DUE_1ST_VERSION_min',
-                   'DAYS_LAST_DUE_1ST_VERSION_sum',
-                   'DAYS_LAST_DUE_1ST_VERSION_std',
-                   'DAYS_LAST_DUE_mean',
-                   'DAYS_LAST_DUE_max',
-                   'DAYS_LAST_DUE_min',
-                   'DAYS_LAST_DUE_sum',
-                   'DAYS_LAST_DUE_std',
-                   'DAYS_TERMINATION_mean',
-                   'DAYS_TERMINATION_max',
-                   'DAYS_TERMINATION_min',
-                   'DAYS_TERMINATION_sum',
-                   'DAYS_TERMINATION_std',
-                   'APP_CREDIT_PERC_mean',
-                   'APP_CREDIT_PERC_max',
-                   'APP_CREDIT_PERC_min',
-                   'APP_CREDIT_PERC_sum',
-                   'APP_CREDIT_PERC_std',
-                   'DAYS_EMPLOYED_PERC']
+                   'CNT_INSTALMENT_MATURE_CUM_mean','CNT_INSTALMENT_MATURE_CUM_max','CNT_INSTALMENT_MATURE_CUM_min','CNT_INSTALMENT_MATURE_CUM_sum','CNT_INSTALMENT_MATURE_CUM_std',
+                   'SK_DPD_mean_x','SK_DPD_max_x','SK_DPD_min_x','SK_DPD_sum_x','SK_DPD_std_x',
+                   'SK_DPD_DEF_mean_x','SK_DPD_DEF_max_x','SK_DPD_DEF_min_x','SK_DPD_DEF_sum_x','SK_DPD_DEF_std_x',
+                   'NUM_INSTALMENT_VERSION_mean','NUM_INSTALMENT_VERSION_max','NUM_INSTALMENT_VERSION_min','NUM_INSTALMENT_VERSION_sum','NUM_INSTALMENT_VERSION_std',
+                   'NUM_INSTALMENT_NUMBER_mean','NUM_INSTALMENT_NUMBER_max','NUM_INSTALMENT_NUMBER_min','NUM_INSTALMENT_NUMBER_sum','NUM_INSTALMENT_NUMBER_std',
+                   'DAYS_INSTALMENT_mean','DAYS_INSTALMENT_max','DAYS_INSTALMENT_min','DAYS_INSTALMENT_sum','DAYS_INSTALMENT_std',
+                   'DAYS_ENTRY_PAYMENT_mean','DAYS_ENTRY_PAYMENT_max','DAYS_ENTRY_PAYMENT_min','DAYS_ENTRY_PAYMENT_sum','DAYS_ENTRY_PAYMENT_std',
+                   'AMT_INSTALMENT_mean','AMT_INSTALMENT_max','AMT_INSTALMENT_min','AMT_INSTALMENT_sum','AMT_INSTALMENT_std',
+                   'AMT_PAYMENT_mean','AMT_PAYMENT_max','AMT_PAYMENT_min','AMT_PAYMENT_sum','AMT_PAYMENT_std',
+                   'PAYMENT_PERC_mean','PAYMENT_PERC_max','PAYMENT_PERC_min','PAYMENT_PERC_sum','PAYMENT_PERC_std',
+                   'PAYMENT_DIFF_mean','PAYMENT_DIFF_max','PAYMENT_DIFF_min','PAYMENT_DIFF_sum','PAYMENT_DIFF_std',
+                   'DPD_mean','DPD_max','DPD_min','DPD_sum','DPD_std', 'DBD_mean','DBD_max','DBD_min','DBD_sum','DBD_std',
+                   'MONTHS_BALANCE_mean','MONTHS_BALANCE_max','MONTHS_BALANCE_min','MONTHS_BALANCE_sum','MONTHS_BALANCE_std',
+                   'CNT_INSTALMENT_mean','CNT_INSTALMENT_max','CNT_INSTALMENT_min','CNT_INSTALMENT_sum','CNT_INSTALMENT_std',
+                   'CNT_INSTALMENT_FUTURE_mean','CNT_INSTALMENT_FUTURE_max','CNT_INSTALMENT_FUTURE_min','CNT_INSTALMENT_FUTURE_sum','CNT_INSTALMENT_FUTURE_std',
+                   'SK_DPD_mean_y','SK_DPD_max_y','SK_DPD_min_y','SK_DPD_sum_y','SK_DPD_std_y',
+                   'SK_DPD_DEF_mean_y','SK_DPD_DEF_max_y','SK_DPD_DEF_min_y','SK_DPD_DEF_sum_y','SK_DPD_DEF_std_y',
+                   'AMT_ANNUITY_mean','AMT_ANNUITY_max','AMT_ANNUITY_min','AMT_ANNUITY_sum','AMT_ANNUITY_std',
+                   'AMT_APPLICATION_mean','AMT_APPLICATION_max','AMT_APPLICATION_min','AMT_APPLICATION_sum','AMT_APPLICATION_std',
+                   'AMT_CREDIT_mean','AMT_CREDIT_max','AMT_CREDIT_min','AMT_CREDIT_sum','AMT_CREDIT_std',
+                   'AMT_DOWN_PAYMENT_mean','AMT_DOWN_PAYMENT_max','AMT_DOWN_PAYMENT_min','AMT_DOWN_PAYMENT_sum','AMT_DOWN_PAYMENT_std',
+                   'AMT_GOODS_PRICE_mean','AMT_GOODS_PRICE_max','AMT_GOODS_PRICE_min','AMT_GOODS_PRICE_sum','AMT_GOODS_PRICE_std',
+                   'HOUR_APPR_PROCESS_START_mean','HOUR_APPR_PROCESS_START_max','HOUR_APPR_PROCESS_START_min','HOUR_APPR_PROCESS_START_sum','HOUR_APPR_PROCESS_START_std',
+                   'NFLAG_LAST_APPL_IN_DAY_mean','NFLAG_LAST_APPL_IN_DAY_max','NFLAG_LAST_APPL_IN_DAY_min','NFLAG_LAST_APPL_IN_DAY_sum','NFLAG_LAST_APPL_IN_DAY_std',
+                   'RATE_DOWN_PAYMENT_mean','RATE_DOWN_PAYMENT_max','RATE_DOWN_PAYMENT_min','RATE_DOWN_PAYMENT_sum','RATE_DOWN_PAYMENT_std',
+                   'RATE_INTEREST_PRIMARY_mean','RATE_INTEREST_PRIMARY_max','RATE_INTEREST_PRIMARY_min','RATE_INTEREST_PRIMARY_sum','RATE_INTEREST_PRIMARY_std',
+                   'RATE_INTEREST_PRIVILEGED_mean','RATE_INTEREST_PRIVILEGED_max','RATE_INTEREST_PRIVILEGED_min','RATE_INTEREST_PRIVILEGED_sum','RATE_INTEREST_PRIVILEGED_std',
+                   'DAYS_DECISION_mean','DAYS_DECISION_max','DAYS_DECISION_min','DAYS_DECISION_sum','DAYS_DECISION_std',
+                   'SELLERPLACE_AREA_mean','SELLERPLACE_AREA_max','SELLERPLACE_AREA_min','SELLERPLACE_AREA_sum','SELLERPLACE_AREA_std',
+                   'CNT_PAYMENT_mean','CNT_PAYMENT_max','CNT_PAYMENT_min','CNT_PAYMENT_sum','CNT_PAYMENT_std',
+                   'DAYS_FIRST_DRAWING_mean','DAYS_FIRST_DRAWING_max','DAYS_FIRST_DRAWING_min','DAYS_FIRST_DRAWING_sum','DAYS_FIRST_DRAWING_std',
+                   'DAYS_FIRST_DUE_mean','DAYS_FIRST_DUE_max','DAYS_FIRST_DUE_min','DAYS_FIRST_DUE_sum','DAYS_FIRST_DUE_std',
+                   'DAYS_LAST_DUE_1ST_VERSION_mean','DAYS_LAST_DUE_1ST_VERSION_max','DAYS_LAST_DUE_1ST_VERSION_min','DAYS_LAST_DUE_1ST_VERSION_sum','DAYS_LAST_DUE_1ST_VERSION_std',
+                   'DAYS_LAST_DUE_mean','DAYS_LAST_DUE_max','DAYS_LAST_DUE_min','DAYS_LAST_DUE_sum','DAYS_LAST_DUE_std',
+                   'DAYS_TERMINATION_mean','DAYS_TERMINATION_max','DAYS_TERMINATION_min','DAYS_TERMINATION_sum','DAYS_TERMINATION_std',
+                   'APP_CREDIT_PERC_mean','APP_CREDIT_PERC_max','APP_CREDIT_PERC_min','APP_CREDIT_PERC_sum','APP_CREDIT_PERC_std','DAYS_EMPLOYED_PERC']
 
     for col in feats_nulls:
         feats[col] = feats[col].fillna(0)
