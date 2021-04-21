@@ -499,9 +499,14 @@ def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance
     feats['INC_PER_CHLD'] = feats.AMT_INCOME_TOTAL / (1 + feats.CNT_CHILDREN)
     feats['SOURCES_PROD'] = feats.EXT_SOURCE_1 * feats.EXT_SOURCE_2 * feats.EXT_SOURCE_3
     feats['CAR_TO_BIRTH_RATIO'] = feats.OWN_CAR_AGE / feats.DAYS_BIRTH
+    feats['CAR_TO_BIRTH_RATIO'] = feats['CAR_TO_BIRTH_RATIO'].fillna(0)
+    
     feats['CAR_TO_EMPLOY_RATIO'] = feats.OWN_CAR_AGE / feats.DAYS_EMPLOYED
+    feats['CAR_TO_EMPLOY_RATIO'] = feats['CAR_TO_EMPLOY_RATIO'].fillna(0)
+    
     feats['PHONE_TO_BIRTH_RATIO'] = feats.DAYS_LAST_PHONE_CHANGE / feats.DAYS_BIRTH
     feats['PHONE_TO_EMPLOY_RATIO'] = feats.DAYS_LAST_PHONE_CHANGE / feats.DAYS_EMPLOYED
+    feats['PHONE_TO_EMPLOY_RATIO'] = feats['PHONE_TO_EMPLOY_RATIO'].fillna(0)
 
     print("feats done")
 
