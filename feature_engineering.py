@@ -489,7 +489,19 @@ def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance
     feats['INCOME_CREDIT_PERC'] = feats.AMT_INCOME_TOTAL / feats.AMT_CREDIT
     
     # need to debug this
-    #train_feat['INCOME_PER_PERSON'] = np.log1p(train_feat.AMT_INCOME_TOTAL / train_feat.CNT_FAM_MEMBERS)
+    feats['INCOME_PER_PERSON'] = np.log1p(feats.AMT_INCOME_TOTAL / feats.CNT_FAM_MEMBERS)
+    feats['ANNUITY_INCOME_PERC'] = np.sqrt(feats.AMT_ANNUITY_x / (1 + feats.AMT_INCOME_TOTAL))
+    
+    feats['LOAN_INCOME_RATIO'] = feats.AMT_CREDIT / feats.AMT_INCOME_TOTAL
+    feats['ANNUITY_LENGTH'] = feats.AMT_CREDIT / feats.AMT_ANNUITY_x
+    feats['CHILDREN_RATIO'] = feats.CNT_CHILDREN / feats.CNT_FAM_MEMBERS
+    feats['CREDIT_TO_GOODS_RATIO'] = feats.AMT_CREDIT / feats.AMT_GOODS_PRICE
+    feats['INC_PER_CHLD'] = feats.AMT_INCOME_TOTAL / (1 + feats.CNT_CHILDREN)
+    feats['SOURCES_PROD'] = feats.EXT_SOURCE_1 * feats.EXT_SOURCE_2 * feats.EXT_SOURCE_3
+    feats['CAR_TO_BIRTH_RATIO'] = feats.OWN_CAR_AGE / feats.DAYS_BIRTH
+    feats['CAR_TO_EMPLOY_RATIO'] = feats.OWN_CAR_AGE / feats.DAYS_EMPLOYED
+    feats['PHONE_TO_BIRTH_RATIO'] = feats.DAYS_LAST_PHONE_CHANGE / feats.DAYS_BIRTH
+    feats['PHONE_TO_EMPLOY_RATIO'] = feats.DAYS_LAST_PHONE_CHANGE / feats.DAYS_EMPLOYED
 
     print("feats done")
 
