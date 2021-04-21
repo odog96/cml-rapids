@@ -8,10 +8,14 @@ from feature_engineering import feature_engineering
 ### Load Data
 bureau_balance = dd.read_parquet('raw_data/bureau_balance.parquet')
 bureau = dd.read_parquet('raw_data/bureau.parquet')
+
+# behaviour data linked to prev as well as current loan
 cc_balance = dd.read_parquet('raw_data/cc_balance.parquet')
 payments = dd.read_parquet('raw_data/payments.parquet')
 pc_balance = dd.read_parquet('raw_data/pc_balance.parquet')
+
 prev = dd.read_parquet('raw_data/prev.parquet')
+
 train = dd.read_parquet('raw_data/train.parquet')
 test = dd.read_parquet('raw_data/test.parquet')
 

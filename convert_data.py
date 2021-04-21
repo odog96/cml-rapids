@@ -3,6 +3,7 @@
 
 import pandas as dd
 
+
 bureau_balance = dd.read_csv('data/bureau_balance.csv')
 bureau_balance['STATUS'] = bureau_balance.STATUS.astype('category')
 bureau_balance.to_parquet('raw_data/bureau_balance.parquet')
@@ -37,12 +38,13 @@ prev = dd.read_csv('data/previous_application.csv',
 prev.to_parquet('raw_data/prev.parquet')
 ## Previous loans with Home Credit Group
 
-train_test_type_dict = {'NAME_CONTRACT_TYPE': 'category', 'CODE_GENDER': 'category',
+train_test_dtype_dict = {'NAME_CONTRACT_TYPE': 'category', 'CODE_GENDER': 'category',
+                          'NAME_INCOME_TYPE': 'category',
                           'NAME_EDUCATION_TYPE': 'category', 'NAME_FAMILY_STATUS': 'category',
                           'NAME_HOUSING_TYPE': 'category', 'FLAG_MOBIL': 'bool', 
                           'FLAG_EMP_PHONE': 'bool', 'FLAG_WORK_PHONE': 'bool',
                           'FLAG_CONT_MOBILE': 'bool', 'FLAG_PHONE': 'bool', 'FLAG_EMAIL': 'bool',
-                          'OCCUPATION_TYPE': 'category', 'CNT_FAM_MEMBERS': 'Int64', 'REGION_RATING_CLIENT': 'category',
+                          'CNT_FAM_MEMBERS': 'Int64', 'REGION_RATING_CLIENT': 'category',
                           'REGION_RATING_CLIENT_W_CITY': 'category', 'WEEKDAY_APPR_PROCESS_START': 'category',
                           'HOUR_APPR_PROCESS_START': 'category', 'REG_REGION_NOT_LIVE_REGION': 'bool',
                           'REG_REGION_NOT_WORK_REGION': 'bool', 'LIVE_REGION_NOT_WORK_REGION': 'bool',
@@ -64,16 +66,14 @@ train_test_type_dict = {'NAME_CONTRACT_TYPE': 'category', 'CODE_GENDER': 'catego
 
 train = dd.read_csv('data/application_train.csv',
                     index_col='SK_ID_CURR',
-                    dtype=train_test_type_dict)
-                    
+                    dtype=train_test_dtype_dict)
 train.FLAG_OWN_CAR = train.FLAG_OWN_CAR.eq('Y').mul(1).astype('bool')
 train.FLAG_OWN_REALTY = train.FLAG_OWN_REALTY.eq('Y').mul(1).astype('bool')
 train.to_parquet('raw_data/train.parquet')
 
 test = dd.read_csv('data/application_test.csv',
                     index_col='SK_ID_CURR',
-                    dtype=train_test_type_dict)
-
+                    dtype=train_test_dtype_dict)
 test.FLAG_OWN_CAR = test.FLAG_OWN_CAR.eq('Y').mul(1).astype('bool')
 test.FLAG_OWN_REALTY = test.FLAG_OWN_REALTY.eq('Y').mul(1).astype('bool')
 test.to_parquet('raw_data/test.parquet')
