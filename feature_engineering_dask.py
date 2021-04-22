@@ -5,7 +5,7 @@ import time
 from dask.distributed import Client
 from dask_cuda import LocalCUDACluster
 import dask_cudf as dd
-from feature_engineering import feature_engineering
+from feature_engineering_adv import feature_engineering
 
 cluster = LocalCUDACluster()
 client = Client(cluster)
