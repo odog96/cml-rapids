@@ -1,6 +1,5 @@
 ### Data Engineering Job
 
-import cudf as dd
 import numpy as np
 import gc
 
@@ -252,7 +251,7 @@ def process_unified(unified):
     
     unified['OCCUPATION_TYPE'] = unified['OCCUPATION_TYPE'].fillna('unknown')
     unified['OCCUPATION_TYPE'] = unified['OCCUPATION_TYPE'].astype('category')
-    unified['CNT_FAM_MEMBERS'] = unified['CNT_FAM_MEMBERS'].fillna(int(np.mean(unified['CNT_FAM_MEMBERS']))) 
+    unified['CNT_FAM_MEMBERS'] = unified['CNT_FAM_MEMBERS'].fillna(int(unified['CNT_FAM_MEMBERS'].mean())) 
 
     unified['FONDKAPREMONT_MODE'] = unified['FONDKAPREMONT_MODE'].fillna('unknown')
     unified['FONDKAPREMONT_MODE'] = unified['FONDKAPREMONT_MODE'].astype('category')
