@@ -43,15 +43,15 @@ def process_cc_balance(cc_balance, agg_func):
     """
     
     ## fill nulls for cc_balance
-    cc_balance['AMT_DRAWINGS_ATM_CURRENT'].fillna(0, inplace=True)
-    cc_balance['AMT_DRAWINGS_OTHER_CURRENT'].fillna(0, inplace=True)
-    cc_balance['AMT_DRAWINGS_POS_CURRENT'].fillna(0, inplace=True)
-    cc_balance['AMT_INST_MIN_REGULARITY'].fillna(0, inplace=True)
-    cc_balance['AMT_PAYMENT_CURRENT'].fillna(0, inplace=True)
-    cc_balance['CNT_DRAWINGS_ATM_CURRENT'].fillna(0, inplace=True)
-    cc_balance['CNT_DRAWINGS_OTHER_CURRENT'].fillna(0, inplace=True)
-    cc_balance['CNT_DRAWINGS_POS_CURRENT'].fillna(0, inplace=True)
-    cc_balance['CNT_INSTALMENT_MATURE_CUM'].fillna(0, inplace=True)
+    cc_balance['AMT_DRAWINGS_ATM_CURRENT'] = cc_balance['AMT_DRAWINGS_ATM_CURRENT'].fillna(0)
+    cc_balance['AMT_DRAWINGS_OTHER_CURRENT'] = cc_balance['AMT_DRAWINGS_OTHER_CURRENT'].fillna(0)
+    cc_balance['AMT_DRAWINGS_POS_CURRENT'] = cc_balance['AMT_DRAWINGS_POS_CURRENT'].fillna(0)
+    cc_balance['AMT_INST_MIN_REGULARITY'] = cc_balance['AMT_INST_MIN_REGULARITY'].fillna(0)
+    cc_balance['AMT_PAYMENT_CURRENT'] = cc_balance['AMT_PAYMENT_CURRENT'].fillna(0)
+    cc_balance['CNT_DRAWINGS_ATM_CURRENT'] = cc_balance['CNT_DRAWINGS_ATM_CURRENT'].fillna(0)
+    cc_balance['CNT_DRAWINGS_OTHER_CURRENT'] = cc_balance['CNT_DRAWINGS_OTHER_CURRENT'].fillna(0)
+    cc_balance['CNT_DRAWINGS_POS_CURRENT'] = cc_balance['CNT_DRAWINGS_POS_CURRENT'].fillna(0)
+    cc_balance['CNT_INSTALMENT_MATURE_CUM'] = cc_balance['CNT_INSTALMENT_MATURE_CUM'].fillna(0)
 
     ## Build sum Credit Card Balance
     sum_cc_balance = cc_balance.drop('SK_ID_PREV', axis=1) \
@@ -120,25 +120,25 @@ def process_prev(prev, agg_func):
     prev['NFLAG_INSURED_ON_APPROVAL'] = prev['NFLAG_INSURED_ON_APPROVAL'].fillna('None')
     prev['NFLAG_INSURED_ON_APPROVAL'] = prev['NFLAG_INSURED_ON_APPROVAL'].astype('category')
 
-    prev['NAME_TYPE_SUITE'].fillna('Unknown', inplace=True)
+    prev['NAME_TYPE_SUITE'] = prev['NAME_TYPE_SUITE'].fillna('Unknown')
     prev['NAME_TYPE_SUITE'] = prev['NAME_TYPE_SUITE'].astype('category')    
 
-    prev['PRODUCT_COMBINATION'].fillna('None', inplace=True)
+    prev['PRODUCT_COMBINATION'] = prev['PRODUCT_COMBINATION'].fillna('None')
     prev['PRODUCT_COMBINATION'] = prev['PRODUCT_COMBINATION'].astype('category')
 
-    prev['AMT_ANNUITY'].fillna(0, inplace=True)
-    prev['AMT_CREDIT'].fillna(0, inplace=True)
-    prev['AMT_DOWN_PAYMENT'].fillna(0, inplace=True)
-    prev['AMT_GOODS_PRICE'].fillna(0, inplace=True)
-    prev['RATE_DOWN_PAYMENT'].fillna(0, inplace=True)
-    prev['RATE_INTEREST_PRIMARY'].fillna(0, inplace=True)
-    prev['RATE_INTEREST_PRIVILEGED'].fillna(0, inplace=True)
-    prev['CNT_PAYMENT'].fillna(0, inplace=True)
-    prev['DAYS_FIRST_DRAWING'].fillna(0, inplace=True)
-    prev['DAYS_FIRST_DUE'].fillna(0, inplace=True)
-    prev['DAYS_LAST_DUE_1ST_VERSION'].fillna(0, inplace=True)
-    prev['DAYS_LAST_DUE'].fillna(0, inplace=True)
-    prev['DAYS_TERMINATION'].fillna(0, inplace=True)
+    prev['AMT_ANNUITY'] = prev['AMT_ANNUITY'].fillna(0)
+    prev['AMT_CREDIT'] = prev['AMT_CREDIT'].fillna(0)
+    prev['AMT_DOWN_PAYMENT'] = prev['AMT_DOWN_PAYMENT'].fillna(0)
+    prev['AMT_GOODS_PRICE'] = prev['AMT_GOODS_PRICE'].fillna(0)
+    prev['RATE_DOWN_PAYMENT'] = prev['RATE_DOWN_PAYMENT'].fillna(0)
+    prev['RATE_INTEREST_PRIMARY'] = prev['RATE_INTEREST_PRIMARY'].fillna(0)
+    prev['RATE_INTEREST_PRIVILEGED'] = prev['RATE_INTEREST_PRIVILEGED'].fillna(0)
+    prev['CNT_PAYMENT'] = prev['CNT_PAYMENT'].fillna(0)
+    prev['DAYS_FIRST_DRAWING'] = prev['DAYS_FIRST_DRAWING'].fillna(0)
+    prev['DAYS_FIRST_DUE'] = prev['DAYS_FIRST_DUE'].fillna(0)
+    prev['DAYS_LAST_DUE_1ST_VERSION'] = prev['DAYS_LAST_DUE_1ST_VERSION'].fillna(0)
+    prev['DAYS_LAST_DUE'] = prev['DAYS_LAST_DUE'].fillna(0)
+    prev['DAYS_TERMINATION'] = prev['DAYS_TERMINATION'].fillna(0)
 
     prev['DAYS_FIRST_DRAWING'] = prev.DAYS_FIRST_DRAWING.map(lambda x: np.nan if x == 365243 else x)
     prev['DAYS_FIRST_DUE'] = prev.DAYS_FIRST_DUE.map(lambda x: np.nan if x == 365243 else x)
@@ -153,49 +153,49 @@ def process_prev(prev, agg_func):
     sum_prev.columns = ["_".join(x) for x in sum_prev.columns.ravel()]
 
     # these are all the std columns so all good
-    sum_prev['AMT_ANNUITY_std'].fillna(0, inplace=True)
-    sum_prev['AMT_APPLICATION_std'].fillna(0, inplace=True)
-    sum_prev['AMT_CREDIT_std'].fillna(0, inplace=True)
-    sum_prev['AMT_DOWN_PAYMENT_std'].fillna(0, inplace=True)
-    sum_prev['AMT_GOODS_PRICE_std'].fillna(0, inplace=True)
-    sum_prev['HOUR_APPR_PROCESS_START_std'].fillna(0, inplace=True)
-    sum_prev['NFLAG_LAST_APPL_IN_DAY_std'].fillna(0, inplace=True)
-    sum_prev['RATE_DOWN_PAYMENT_std'].fillna(0, inplace=True)
-    sum_prev['RATE_INTEREST_PRIMARY_std'].fillna(0, inplace=True)
-    sum_prev['RATE_INTEREST_PRIVILEGED_std'].fillna(0, inplace=True)
-    sum_prev['DAYS_DECISION_std'].fillna(0, inplace=True)
-    sum_prev['SELLERPLACE_AREA_std'].fillna(0, inplace=True)
-    sum_prev['CNT_PAYMENT_std'].fillna(0, inplace=True)
-    sum_prev['DAYS_FIRST_DRAWING_max'].fillna(0, inplace=True)
-    sum_prev['DAYS_FIRST_DRAWING_min'].fillna(0, inplace=True)
-    sum_prev['DAYS_FIRST_DRAWING_mean'].fillna(0, inplace=True)
-    sum_prev['DAYS_FIRST_DRAWING_sum'].fillna(0, inplace=True)
-    sum_prev['DAYS_FIRST_DRAWING_std'].fillna(0, inplace=True)
-    sum_prev['DAYS_FIRST_DUE_max'].fillna(0, inplace=True)
-    sum_prev['DAYS_FIRST_DUE_min'].fillna(0, inplace=True)
-    sum_prev['DAYS_FIRST_DUE_mean'].fillna(0, inplace=True)
-    sum_prev['DAYS_FIRST_DUE_sum'].fillna(0, inplace=True)
-    sum_prev['DAYS_FIRST_DUE_std'].fillna(0, inplace=True)
-    sum_prev['DAYS_LAST_DUE_1ST_VERSION_max'].fillna(0, inplace=True)
-    sum_prev['DAYS_LAST_DUE_1ST_VERSION_min'].fillna(0, inplace=True)
-    sum_prev['DAYS_LAST_DUE_1ST_VERSION_mean'].fillna(0, inplace=True)
-    sum_prev['DAYS_LAST_DUE_1ST_VERSION_sum'].fillna(0, inplace=True)
-    sum_prev['DAYS_LAST_DUE_1ST_VERSION_std'].fillna(0, inplace=True)
-    sum_prev['DAYS_LAST_DUE_max'].fillna(0, inplace=True)
-    sum_prev['DAYS_LAST_DUE_min'].fillna(0, inplace=True)
-    sum_prev['DAYS_LAST_DUE_mean'].fillna(0, inplace=True)
-    sum_prev['DAYS_LAST_DUE_sum'].fillna(0, inplace=True)
-    sum_prev['DAYS_LAST_DUE_std'].fillna(0, inplace=True)
-    sum_prev['DAYS_TERMINATION_max'].fillna(0, inplace=True)
-    sum_prev['DAYS_TERMINATION_min'].fillna(0, inplace=True)
-    sum_prev['DAYS_TERMINATION_mean'].fillna(0, inplace=True)
-    sum_prev['DAYS_TERMINATION_sum'].fillna(0, inplace=True)
-    sum_prev['DAYS_TERMINATION_std'].fillna(0, inplace=True)
-    sum_prev['APP_CREDIT_PERC_max'].fillna(0, inplace=True)
-    sum_prev['APP_CREDIT_PERC_min'].fillna(0, inplace=True)
-    sum_prev['APP_CREDIT_PERC_mean'].fillna(0, inplace=True)
-    sum_prev['APP_CREDIT_PERC_sum'].fillna(0, inplace=True)
-    sum_prev['APP_CREDIT_PERC_std'].fillna(0, inplace=True)
+    sum_prev['AMT_ANNUITY_std'] = sum_prev['AMT_ANNUITY_std'].fillna(0)
+    sum_prev['AMT_APPLICATION_std'] = sum_prev['AMT_APPLICATION_std'].fillna(0)
+    sum_prev['AMT_CREDIT_std'] = sum_prev['AMT_CREDIT_std'].fillna(0)
+    sum_prev['AMT_DOWN_PAYMENT_std'] = sum_prev['AMT_DOWN_PAYMENT_std'].fillna(0)
+    sum_prev['AMT_GOODS_PRICE_std'] = sum_prev['AMT_GOODS_PRICE_std'].fillna(0)
+    sum_prev['HOUR_APPR_PROCESS_START_std'] = sum_prev['HOUR_APPR_PROCESS_START_std'].fillna(0)
+    sum_prev['NFLAG_LAST_APPL_IN_DAY_std'] = sum_prev['NFLAG_LAST_APPL_IN_DAY_std'].fillna(0)
+    sum_prev['RATE_DOWN_PAYMENT_std'] = sum_prev['RATE_DOWN_PAYMENT_std'].fillna(0)
+    sum_prev['RATE_INTEREST_PRIMARY_std'] = sum_prev['RATE_INTEREST_PRIMARY_std'].fillna(0)
+    sum_prev['RATE_INTEREST_PRIVILEGED_std'] = sum_prev['RATE_INTEREST_PRIVILEGED_std'].fillna(0)
+    sum_prev['DAYS_DECISION_std'] = sum_prev['DAYS_DECISION_std'].fillna(0)
+    sum_prev['SELLERPLACE_AREA_std'] = sum_prev['SELLERPLACE_AREA_std'].fillna(0)
+    sum_prev['CNT_PAYMENT_std'] = sum_prev['CNT_PAYMENT_std'].fillna(0)
+    sum_prev['DAYS_FIRST_DRAWING_max'] = sum_prev['DAYS_FIRST_DRAWING_max'].fillna(0)
+    sum_prev['DAYS_FIRST_DRAWING_min'] = sum_prev['DAYS_FIRST_DRAWING_min'].fillna(0)
+    sum_prev['DAYS_FIRST_DRAWING_mean'] = sum_prev['DAYS_FIRST_DRAWING_mean'].fillna(0)
+    sum_prev['DAYS_FIRST_DRAWING_sum'] = sum_prev['DAYS_FIRST_DRAWING_sum'].fillna(0)
+    sum_prev['DAYS_FIRST_DRAWING_std'] = sum_prev['DAYS_FIRST_DRAWING_std'].fillna(0)
+    sum_prev['DAYS_FIRST_DUE_max'] = sum_prev['DAYS_FIRST_DUE_max'].fillna(0)
+    sum_prev['DAYS_FIRST_DUE_min'] = sum_prev['DAYS_FIRST_DUE_min'].fillna(0)
+    sum_prev['DAYS_FIRST_DUE_mean'] = sum_prev['DAYS_FIRST_DUE_mean'].fillna(0)
+    sum_prev['DAYS_FIRST_DUE_sum'] = sum_prev['DAYS_FIRST_DUE_sum'].fillna(0)
+    sum_prev['DAYS_FIRST_DUE_std'] = sum_prev['DAYS_FIRST_DUE_std'].fillna(0)
+    sum_prev['DAYS_LAST_DUE_1ST_VERSION_max'] = sum_prev['DAYS_LAST_DUE_1ST_VERSION_max'].fillna(0)
+    sum_prev['DAYS_LAST_DUE_1ST_VERSION_min'] = sum_prev['DAYS_LAST_DUE_1ST_VERSION_min'].fillna(0)
+    sum_prev['DAYS_LAST_DUE_1ST_VERSION_mean'] = sum_prev['DAYS_LAST_DUE_1ST_VERSION_mean'].fillna(0)
+    sum_prev['DAYS_LAST_DUE_1ST_VERSION_sum'] = sum_prev['DAYS_LAST_DUE_1ST_VERSION_sum'].fillna(0)
+    sum_prev['DAYS_LAST_DUE_1ST_VERSION_std'] = sum_prev['DAYS_LAST_DUE_1ST_VERSION_std'].fillna(0)
+    sum_prev['DAYS_LAST_DUE_max'] = sum_prev['DAYS_LAST_DUE_max'].fillna(0)
+    sum_prev['DAYS_LAST_DUE_min'] = sum_prev['DAYS_LAST_DUE_min'].fillna(0)
+    sum_prev['DAYS_LAST_DUE_mean'] = sum_prev['DAYS_LAST_DUE_mean'].fillna(0)
+    sum_prev['DAYS_LAST_DUE_sum'] = sum_prev['DAYS_LAST_DUE_sum'].fillna(0)
+    sum_prev['DAYS_LAST_DUE_std'] = sum_prev['DAYS_LAST_DUE_std'].fillna(0)
+    sum_prev['DAYS_TERMINATION_max'] = sum_prev['DAYS_TERMINATION_max'].fillna(0)
+    sum_prev['DAYS_TERMINATION_min'] = sum_prev['DAYS_TERMINATION_min'].fillna(0)
+    sum_prev['DAYS_TERMINATION_mean'] = sum_prev['DAYS_TERMINATION_mean'].fillna(0)
+    sum_prev['DAYS_TERMINATION_sum'] = sum_prev['DAYS_TERMINATION_sum'].fillna(0)
+    sum_prev['DAYS_TERMINATION_std'] = sum_prev['DAYS_TERMINATION_std'].fillna(0)
+    sum_prev['APP_CREDIT_PERC_max'] = sum_prev['APP_CREDIT_PERC_max'].fillna(0)
+    sum_prev['APP_CREDIT_PERC_min'] = sum_prev['APP_CREDIT_PERC_min'].fillna(0)
+    sum_prev['APP_CREDIT_PERC_mean'] = sum_prev['APP_CREDIT_PERC_mean'].fillna(0)
+    sum_prev['APP_CREDIT_PERC_sum'] = sum_prev['APP_CREDIT_PERC_sum'].fillna(0)
+    sum_prev['APP_CREDIT_PERC_std'] = sum_prev['APP_CREDIT_PERC_std'].fillna(0)
 
     # free up gpu ram
     del(prev)
@@ -296,11 +296,11 @@ def process_bureau(bureau, avg_bbalance):
 
     avg_bureau.set_index('SK_ID_CURR')
 
-    avg_bureau['MONTHS_BALANCE_mean'].fillna(0, inplace=True)
-    avg_bureau['MONTHS_BALANCE_max'].fillna(0, inplace=True)
-    avg_bureau['MONTHS_BALANCE_min'].fillna(0, inplace=True)
-    avg_bureau['MONTHS_BALANCE_sum'].fillna(0, inplace=True)
-    avg_bureau['MONTHS_BALANCE_std'].fillna(0, inplace=True)
+    avg_bureau['MONTHS_BALANCE_mean'] = avg_bureau['MONTHS_BALANCE_mean'].fillna(0)
+    avg_bureau['MONTHS_BALANCE_max'] = avg_bureau['MONTHS_BALANCE_max'].fillna(0)
+    avg_bureau['MONTHS_BALANCE_min'] = avg_bureau['MONTHS_BALANCE_min'].fillna(0)
+    avg_bureau['MONTHS_BALANCE_sum'] = avg_bureau['MONTHS_BALANCE_sum'].fillna(0)
+    avg_bureau['MONTHS_BALANCE_std'] = avg_bureau['MONTHS_BALANCE_std'].fillna(0)
 
     ## free up gpu ram
     del(bureau)
@@ -402,7 +402,7 @@ def process_pc_balance(pc_balance, agg_func):
     return sum_pc_balance
 
 def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance,
-                        prev, unified):
+                        prev, unified, checks=True):
     """
 
     Feature engineering script to process our data
@@ -463,11 +463,13 @@ def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance
     #train.set_index('SK_ID_CURR')
     
     # check for nulls
-    assert len(avg_bureau.isnull().any()[avg_bureau.isnull().any()==True].index) == 0
-    assert len(sum_cc_balance.isnull().any()[sum_cc_balance.isnull().any()==True].index) == 0
-    assert len(sum_payments.isnull().any()[sum_payments.isnull().any()==True].index) == 0
-    assert len(sum_pc_balance.isnull().any()[sum_pc_balance.isnull().any()==True].index) == 0
-    assert len(sum_prev.isnull().any()[sum_prev.isnull().any()==True].index) == 0
+    # these checks crash dask_cudf
+    if checks:
+        assert len(avg_bureau.isnull().any()[avg_bureau.isnull().any()==True].index) == 0
+        assert len(sum_cc_balance.isnull().any()[sum_cc_balance.isnull().any()==True].index) == 0
+        assert len(sum_payments.isnull().any()[sum_payments.isnull().any()==True].index) == 0
+        assert len(sum_pc_balance.isnull().any()[sum_pc_balance.isnull().any()==True].index) == 0
+        assert len(sum_prev.isnull().any()[sum_prev.isnull().any()==True].index) == 0
 
     print("process unified dataset")
 
