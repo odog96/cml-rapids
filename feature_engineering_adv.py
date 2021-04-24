@@ -2,6 +2,8 @@
 
 import numpy as np
 import gc
+import dask_cudf
+from dask import dataframe as daskd
 
 def process_bureau_balance(bureau_balance, agg_func):
     """
@@ -234,8 +236,11 @@ def process_unified(unified):
     bulk_fill_2 = ['OBS_30_CNT_SOCIAL_CIRCLE', 'DEF_30_CNT_SOCIAL_CIRCLE', 
                     'OBS_60_CNT_SOCIAL_CIRCLE', 'DEF_60_CNT_SOCIAL_CIRCLE']
 
+    
     for col in bulk_fill_2:
-        unified[col] = unified[col].fillna(int(np.mean(unified[col])))
+        unified[col] = unified[col].astype('float64')
+        unified[col] = unified[col].fillna(unified[col].mean())
+        unified[col] = unified[col].round(0).astype('int64')
 
     bulk_fill_3 = ['DAYS_LAST_PHONE_CHANGE', 'AMT_REQ_CREDIT_BUREAU_HOUR',
         'AMT_REQ_CREDIT_BUREAU_DAY', 'AMT_REQ_CREDIT_BUREAU_WEEK',
@@ -247,11 +252,18 @@ def process_unified(unified):
     #unified['NAME_TYPE_SUITE'].cat.add_categories('unknown')
     unified['NAME_TYPE_SUITE'] = unified['NAME_TYPE_SUITE'].fillna('unknown')
     unified['NAME_TYPE_SUITE'] = unified['NAME_TYPE_SUITE'].astype('category')
-    unified['OWN_CAR_AGE'] = unified['OWN_CAR_AGE'].fillna(np.median(unified['OWN_CAR_AGE']))
+    # we should use median but that is no supported in dask at the moment
+    unified['OWN_CAR_AGE'] = unified['OWN_CAR_AGE'].fillna(unified['OWN_CAR_AGE'].mean())
     
     unified['OCCUPATION_TYPE'] = unified['OCCUPATION_TYPE'].fillna('unknown')
     unified['OCCUPATION_TYPE'] = unified['OCCUPATION_TYPE'].astype('category')
-    unified['CNT_FAM_MEMBERS'] = unified['CNT_FAM_MEMBERS'].fillna(int(unified['CNT_FAM_MEMBERS'].mean())) 
+    
+    #if type(unified) == dask_cudf.core.DataFrame:
+    #    unified['CNT_FAM_MEMBERS'] = unified['CNT_FAM_MEMBERS'].fillna(int(unified['CNT_FAM_MEMBERS'].mean().compute())) 
+    #else:
+    unified['CNT_FAM_MEMBERS'] = unified['CNT_FAM_MEMBERS'].astype('float64') 
+    unified['CNT_FAM_MEMBERS'] = unified['CNT_FAM_MEMBERS'].fillna(unified['CNT_FAM_MEMBERS'].mean())
+    unified['CNT_FAM_MEMBERS'] = unified['CNT_FAM_MEMBERS'].round(0).astype('int64') 
 
     unified['FONDKAPREMONT_MODE'] = unified['FONDKAPREMONT_MODE'].fillna('unknown')
     unified['FONDKAPREMONT_MODE'] = unified['FONDKAPREMONT_MODE'].astype('category')
@@ -294,12 +306,16 @@ def process_bureau(bureau, avg_bbalance):
                               right_index=True)
 
     avg_bureau.set_index('SK_ID_CURR')
+    avg_bureau = avg_bureau.drop('SK_ID_CURR', axis=1)
 
-    avg_bureau['MONTHS_BALANCE_mean'] = avg_bureau['MONTHS_BALANCE_mean'].fillna(0)
-    avg_bureau['MONTHS_BALANCE_max'] = avg_bureau['MONTHS_BALANCE_max'].fillna(0)
-    avg_bureau['MONTHS_BALANCE_min'] = avg_bureau['MONTHS_BALANCE_min'].fillna(0)
-    avg_bureau['MONTHS_BALANCE_sum'] = avg_bureau['MONTHS_BALANCE_sum'].fillna(0)
-    avg_bureau['MONTHS_BALANCE_std'] = avg_bureau['MONTHS_BALANCE_std'].fillna(0)
+    fill_values = {'MONTHS_BALANCE_mean': 0, 'MONTHS_BALANCE_max': 0, 'MONTHS_BALANCE_min': 0, 
+                    'MONTHS_BALANCE_sum': 0, 'MONTHS_BALANCE_std': 0}
+    avg_bureau = avg_bureau.fillna(value=fill_values)
+    ##avg_bureau['MONTHS_BALANCE_mean'] = avg_bureau['MONTHS_BALANCE_mean'].fillna(0)
+    ##avg_bureau['MONTHS_BALANCE_max'] = avg_bureau['MONTHS_BALANCE_max'].fillna(0)
+    ##avg_bureau['MONTHS_BALANCE_min'] = avg_bureau['MONTHS_BALANCE_min'].fillna(0)
+    ##avg_bureau['MONTHS_BALANCE_sum'] = avg_bureau['MONTHS_BALANCE_sum'].fillna(0)
+    ##avg_bureau['MONTHS_BALANCE_std'] = avg_bureau['MONTHS_BALANCE_std'].fillna(0)
 
     ## free up gpu ram
     del(bureau)
@@ -336,6 +352,9 @@ def process_payments(payments, agg_func):
     sum_payments['DPD'] = sum_payments['DPD'].map(lambda x: x if x > 0 else 0)
     sum_payments['DBD'] = sum_payments['DBD'].map(lambda x: x if x > 0 else 0)
 
+    #del(payments)
+    #gc.collect()
+
     # group and apply our aggs
     sum_payments = sum_payments.select_dtypes('number').groupby('SK_ID_CURR') \
                 .agg(agg_func)
@@ -358,9 +377,7 @@ def process_payments(payments, agg_func):
 
     #sum_payments.set_index('SK_ID_CURR')
 
-    del(payments)
-    gc.collect()
-
+    
     return sum_payments
 
 def process_pc_balance(pc_balance, agg_func):
@@ -401,7 +418,7 @@ def process_pc_balance(pc_balance, agg_func):
     return sum_pc_balance
 
 def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance,
-                        prev, unified, checks=True):
+                        prev, unified, dd, checks=True):
     """
 
     Feature engineering script to process our data
@@ -434,14 +451,14 @@ def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance
 
     avg_bbalance = process_bureau_balance(bureau_balance, agg_func)
 
-    print("procecssing cc balance")
-
-    sum_cc_balance = process_cc_balance(cc_balance, agg_func)
-
     print("procecssing bureau")
 
     ## Build Avg Bureau table
     avg_bureau = process_bureau(bureau, avg_bbalance)
+
+    print("procecssing cc balance")
+
+    sum_cc_balance = process_cc_balance(cc_balance, agg_func)
 
     print("procecssing payments")
 
@@ -474,16 +491,19 @@ def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance
 
     unified = process_unified(unified)
 
-    print("merging feats into train and test - part1")
+    print("merging feats into train and test")
 
     feats = unified \
         .merge(avg_bureau, how='left', left_index=True, right_index=True) \
         .merge(sum_cc_balance, how='left', left_index=True, right_index=True) \
         .merge(sum_payments, how='left', left_index=True, right_index=True) \
         .merge(sum_pc_balance, how='left', left_index=True, right_index=True) \
-        .merge(sum_prev, how='left', left_index=True, right_index=True) \
+        .merge(sum_prev, how='left', left_index=True, right_index=True)
 
-    print("extra feats")
+    del(avg_bureau, sum_cc_balance, sum_payments, sum_pc_balance, sum_prev)
+    gc.collect()
+
+    print("generate extra feats")
 
     feats['DAYS_EMPLOYED'] = feats.DAYS_EMPLOYED.map(lambda x: np.nan if x == 365243 else x)
     feats['DAYS_EMPLOYED_PERC'] = np.sqrt(feats.DAYS_EMPLOYED / feats.DAYS_BIRTH)
@@ -509,7 +529,7 @@ def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance
     feats['PHONE_TO_EMPLOY_RATIO'] = feats.DAYS_LAST_PHONE_CHANGE / feats.DAYS_EMPLOYED
     feats['PHONE_TO_EMPLOY_RATIO'] = feats['PHONE_TO_EMPLOY_RATIO'].fillna(0)
 
-    print("feats done")
+    print("Post Process Feats")
 
     # cleanup nulls
     feats_nulls = ['DAYS_EMPLOYED','OWN_CAR_AGE','MONTHS_BALANCE_mean_y','MONTHS_BALANCE_max_y','MONTHS_BALANCE_min_y','MONTHS_BALANCE_sum_y','MONTHS_BALANCE_std_y',
@@ -569,9 +589,29 @@ def feature_engineering(bureau_balance, bureau, cc_balance, payments, pc_balance
     for col in feats_nulls:
         feats[col] = feats[col].fillna(0)
 
+    # converting to a null less numeric set
+    # basic dummies treatment
+    # this overflows my local setup
+    #dummy_cols = feats.select_dtypes(['bool', 'O', 'category']).columns.tolist()
+    #
+    #if type(feats) == dask_cudf.core.DataFrame:
+    #    print("Dask Dummies")
+    #    feats[dummy_cols] = feats[dummy_cols].categorize()
+    #    feats = daskd.get_dummies(feats)
+    #else:
+    #    feats = dd.get_dummies(feats, columns=dummy_cols, dtype='int64')
+#
+    ## XGB for pandas does not like Int64
+    #for col in feats.select_dtypes('Int64').columns.tolist():
+    #    feats[col] = feats[col].fillna(int(feats[col].mean()))
+    #    feats[col] = feats[col].astype('int64')
+#
+    #for col in feats.isna().any()[feats.isna().any()==True].index.tolist():
+    #    feats[col] = feats[col].fillna(0)
+
     #train_feat = feats[]
 
     # dask test - WIP
     #train_feat.compute()
 
-    return avg_bureau, sum_cc_balance, sum_payments, sum_pc_balance, sum_prev, feats
+    return feats.persist()
