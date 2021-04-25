@@ -6,7 +6,7 @@ import numpy as np
 import gc
 
 def one_hot_encoder(dd, df, nan_as_category = True):
-    # add an exclusion for 
+    # one hot encode function for the data
     original_columns = list(df.columns)
     categorical_columns = [col for col in df.columns if (df[col].dtype in ['object']) ]
     
@@ -28,7 +28,8 @@ def process_unified(unified, dd):
     unified['NEW_CREDIT_TO_ANNUITY_RATIO'] = unified['AMT_CREDIT'] / unified['AMT_ANNUITY']
     unified['NEW_CREDIT_TO_GOODS_RATIO'] = unified['AMT_CREDIT'] / unified['AMT_GOODS_PRICE']
     
-    # debug for cudf
+    # kurtosis works differently in cudf and hence we had to add an exception
+    # for if we are feeding in pandas format data or not
     if type(unified) == cudf.core.dataframe.DataFrame:
         unified['NEW_DOC_IND_KURT'] = unified[docs].to_pandas().kurtosis(axis=1)
     else:
@@ -117,3 +118,48 @@ def process_bureau_and_balance(bureau, bureau_balance, dd, nan_as_category = Tru
     del closed, closed_agg, bureau
     gc.collect()
     return bureau_agg
+
+def process_previous_applications(prev, dd, nan_as_category = True):
+    
+    prev, cat_cols = one_hot_encoder(dd, prev, nan_as_category= True)
+    # Days 365.243 values -> nan
+    prev['DAYS_FIRST_DRAWING'].replace(365243, np.nan, inplace= True)
+    prev['DAYS_FIRST_DUE'].replace(365243, np.nan, inplace= True)
+    prev['DAYS_LAST_DUE_1ST_VERSION'].replace(365243, np.nan, inplace= True)
+    prev['DAYS_LAST_DUE'].replace(365243, np.nan, inplace= True)
+    prev['DAYS_TERMINATION'].replace(365243, np.nan, inplace= True)
+    # Add feature: value ask / value received percentage
+    prev['APP_CREDIT_PERC'] = prev['AMT_APPLICATION'] / prev['AMT_CREDIT']
+    # Previous applications numeric features
+    num_aggregations = {
+        'AMT_ANNUITY': [ 'max', 'mean'],
+        'AMT_APPLICATION': ['min', 'mean'],
+        'AMT_CREDIT': ['min', 'max', 'mean'],
+        'APP_CREDIT_PERC': ['min', 'max', 'mean'],
+        'AMT_DOWN_PAYMENT': ['min', 'max', 'mean'],
+        'AMT_GOODS_PRICE': ['min', 'max', 'mean'],
+        'HOUR_APPR_PROCESS_START': ['min', 'max', 'mean'],
+        'RATE_DOWN_PAYMENT': ['min', 'max', 'mean'],
+        'DAYS_DECISION': ['min', 'max', 'mean'],
+        'CNT_PAYMENT': ['mean', 'sum'],
+    }
+    # Previous applications categorical features
+    cat_aggregations = {}
+    for cat in cat_cols:
+        cat_aggregations[cat] = ['mean']
+    
+    prev_agg = prev.groupby('SK_ID_CURR').agg({**num_aggregations, **cat_aggregations})
+    prev_agg.columns = dd.Index(['PREV_' + e[0] + "_" + e[1].upper() for e in prev_agg.columns.tolist()])
+    # Previous Applications: Approved Applications - only numerical features
+    approved = prev[prev['NAME_CONTRACT_STATUS_Approved'] == 1]
+    approved_agg = approved.groupby('SK_ID_CURR').agg(num_aggregations)
+    approved_agg.columns = dd.Index(['APPROVED_' + e[0] + "_" + e[1].upper() for e in approved_agg.columns.tolist()])
+    prev_agg = prev_agg.join(approved_agg, how='left', on='SK_ID_CURR')
+    # Previous Applications: Refused Applications - only numerical features
+    refused = prev[prev['NAME_CONTRACT_STATUS_Refused'] == 1]
+    refused_agg = refused.groupby('SK_ID_CURR').agg(num_aggregations)
+    refused_agg.columns = dd.Index(['REFUSED_' + e[0] + "_" + e[1].upper() for e in refused_agg.columns.tolist()])
+    prev_agg = prev_agg.join(refused_agg, how='left', on='SK_ID_CURR')
+    del refused, refused_agg, approved, approved_agg, prev
+    gc.collect()
+    return prev_agg
