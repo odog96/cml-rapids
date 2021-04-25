@@ -53,19 +53,30 @@ Open `A_First_Model.ipynb`
 
 At the start of this notebook, you can choose which set of libraries to load.
 The RAPIDs set or the Pandas set. Just run one of these cells.
-![choose_which_set](images/)
+![choose_which_set](images/Choose_version.gif)
 
 This notebook goes through loading just the train and test datasets
-![train_test_cell](images/)
+![train_test_cell](images/load_data.png)
 
 Some simple filtering out of columns with a lot of missing values
-![missing_columns](images/)
+![missing_columns](images/Check_Missing.gif)
+
+It is worth noting that although RAPIDS `cudf` is mostly a drop in replacement for `pandas`, we do need to change some parts to make it work seamlessly.
+
+```python
+if type(df_app_train_miss_values) == cudf.core.dataframe.DataFrame:
+    drop_columns = df_app_train_miss_values[df_app_train_miss_values['missing percent'] \
+                                        >= 40]['columns'].to_arrow().to_pylist()
+else:
+    drop_columns = df_app_train_miss_values[df_app_train_miss_values['missing percent'] \
+                                        >= 40]['columns'].tolist()
+```
 
 The training of the model
-![missing_columns](images/)
+![missing_columns](images/Training_Model_Jupyter.gif)
 
 And analysis of the results.
-![model_analysis](images/)
+![model_analysis](images/Feature_Importances.png)
 
 From our testing, the RAPIDS accelerated pipeline is ~28% faster.
 ### Feature Engineering
@@ -90,7 +101,7 @@ From our testing, we see the followin in terms of performance:
 
 We can see that for all parts of the process, RAPIDs offers higher performance than raw Pandas. It is worth noting at this stage, that RAPIDs cuDF can only take advantage of one GPU. Should we wish to scale beyong a single GPU, we will need to leverage `dask_cudf`.
 
-Moving to Dask requires moving to a clustered architecture and refactoring the code to work within the constraints of the dask dataframe. Whilst most Pandas APIs will transfer seamlessly to Dask, there are notable exceptions. See https://docs.dask.org/en/latest/dataframe.html for more information. Given the added complexity we will save this for a future topic.
+Moving to Dask requires moving to a clustered architecture and refactoring the code to work within the constraints of the dask dataframe. Whilst most Pandas APIs will transfer seamlessly to Dask, there are notable exceptions. See https://docs.dask.org/en/latest/dataframe.html for more information. Given the added complexity we will save this for a future discussion.
 
 ### Modelling
 
@@ -102,8 +113,14 @@ For the advanced modelling section, we will again leverage xgboost as our primar
 With the Home Credit Default Risk Challenge, overfitting is very easy. So we have included a cross validation step here. In order to use `train_test_split` with RAPIDS cudf frames, we use the `cuml` version instead. cuML, however, doesn't have `StratifiedKFold` sampling so we will use the `sklearn` version.
 
 `StratifiedKFold` isn't very computationally expensive however so it doesn't matter that we aren't running this on GPU. The resulting indexes can also be used directly with cudf dataframes via `iloc` as per normal.
+
+![KFold_Training](images/KFold_Training.gif)
+
 ### Accessing Models
 
+With our model trained, we can have a look at the confusion matrix and auc scores from our model. Again, we use cuml versions so that we don't have to transfer the data back to CPU.
+
+![Results](images/Results.png)
 
 ## TODOS
 
