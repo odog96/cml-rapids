@@ -28,27 +28,33 @@ In this example we will a Jupyter Notebook session to run our code. Create a ses
 ## Get the Dataset
 
 For the code to work, the data in it's CSV format should be placed into the data subfolder. The dataset can be downloaded from: https://www.kaggle.com/c/home-credit-default-risk/data
-![data_subfolder](images/)
+![data_subfolder](images/data_folder.png)
 
 To validate that our image is working and that RAPIDS is correctly configured, run `testing.py` from a terminal session in jupyterlab.
-![testing_RAPIDS](images/)
-You should see:
-![testing_RAPIDS](images/)
+![testing_RAPIDS](images/testing_rapids.gif)
+
+If you do not see the row count appear at the end then there maybe issues with the RAPIDS configuration.
 
 Common problems at this stage can be related to GPU versions. RAPIDS is only supported on newer NVIDIA gpus. For AWS this means at least P3 instances. P2 GPU instances are not supported.
-![GPU_error_message](images/)
+![GPU_error_message](images/old_gpu.png)
 ### Data Ingestion
 
-TODO - Do we need to create a requirements.txt for installing libs?
+* TODO - Do we need to create a requirements.txt for installing libs?
 
-The raw data is in a series of CSV files. We will firstly convert this to parquet format. Run the `convert_data.py` script. This will open the csvs with correctly data types then save them out as parquet in the `raw_data` folder. 
-![running_convert_data](images/)
+The raw data is in a series of CSV files. We will firstly convert this to parquet format. These days, most data lakes exist as object stores full of parquet files
 
-Exploring the dataset, there are numerical columns, categorical and boolean columns. 
+Run the `convert_data.py` script. This will open the csvs with correctly data types then save them out as parquet in the `raw_data` folder. 
+![running_convert_data](images/convert_data.gif)
+
+Now we have all our parquet datasets to continue on our RAPIDS journey
+![folder_structure_afterwards](images/processed_data.png)
+
+Exploring the dataset, there are numerical columns, categorical and boolean columns. The `application_test` and `application_train` files contain the main features that we will be building our model off of whilst the other tables provide some supplementary data. Feel free to skim through: `First_Exploration.ipynb` in order to see some basic exploration of the datasets. 
 
 ### Simple Exploration and Model
 
-Lets start with a simple model to start.
+As with all Machine Learning problems, lets start with a simple model. This gives us the opportunity to build a baseline to improve off of and also to check that Machine Learning can learn something off the data right off the bat.
+
 Open `A_First_Model.ipynb`
 
 At the start of this notebook, you can choose which set of libraries to load.
@@ -121,6 +127,10 @@ With the Home Credit Default Risk Challenge, overfitting is very easy. So we hav
 With our model trained, we can have a look at the confusion matrix and auc scores from our model. Again, we use cuml versions so that we don't have to transfer the data back to CPU.
 
 ![Results](images/Results.png)
+
+### Conclusion
+
+In this post, we have shown how you can leverage NVIDIA RAPIDS in order to accelerate your Machine Learning Projects in Cloudera Machine Learning
 
 ## TODOS
 
