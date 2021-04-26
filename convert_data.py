@@ -3,33 +3,38 @@
 
 import pandas as dd
 
-
+print("converting bureau balance")
 bureau_balance = dd.read_csv('data/bureau_balance.csv')
 bureau_balance['STATUS'] = bureau_balance.STATUS.astype('category')
 bureau_balance.to_parquet('raw_data/bureau_balance.parquet')
 ## Links to Bureau on sK_ID_BUREAU
 
+print("converting bureau")
 bureau = dd.read_csv('data/bureau.csv',
                     dtype={'CREDIT_ACTIVE': 'category', 'CREDIT_CURRENCY': 'category'})
 bureau.to_parquet('raw_data/bureau.parquet')
 ## Links to Train data on SK_ID_CURR
 
+print("converting credit card balance")
 cc_balance = dd.read_csv('data/credit_card_balance.csv',
                         dtype={'NAME_CONTRACT_STATUS': 'category'})
 cc_balance.to_parquet('raw_data/cc_balance.parquet')
 ## Links to Prev on SK_ID_PREV
 ## Though also have SK_ID_CURR
 
+print("converting installments payments")
 payments = dd.read_csv('data/installments_payments.csv')
 payments.to_parquet('raw_data/payments.parquet')
 ## Links to Prev on SK_ID_PREV
 ## Though also have SK_ID_CURR
 
+print("converting POS CASH Balance")
 pc_balance = dd.read_csv('data/POS_CASH_balance.csv')
 pc_balance.to_parquet('raw_data/pc_balance.parquet')
 ## Links to Prev on SK_ID_PREV
 ## Though also have SK_ID_CURR
 
+print("converting prev applications")
 prev = dd.read_csv('data/previous_application.csv',
                   dtype={'NAME_CONTRACT_TYPE': 'category', 'WEEKDAY_APPR_PROCESS_START': 'category',
                         'FLAG_LAST_APPL_PER_CONTRACT': 'category', 'NAME_CONTRACT_STATUS': 'category',
@@ -38,6 +43,7 @@ prev = dd.read_csv('data/previous_application.csv',
 prev.to_parquet('raw_data/prev.parquet')
 ## Previous loans with Home Credit Group
 
+print("converting train and test")
 train_test_dtype_dict = {'NAME_CONTRACT_TYPE': 'category', 'CODE_GENDER': 'category',
                           'NAME_INCOME_TYPE': 'category',
                           'NAME_EDUCATION_TYPE': 'category', 'NAME_FAMILY_STATUS': 'category',
@@ -77,3 +83,5 @@ test = dd.read_csv('data/application_test.csv',
 test.FLAG_OWN_CAR = test.FLAG_OWN_CAR.eq('Y').mul(1).astype('bool')
 test.FLAG_OWN_REALTY = test.FLAG_OWN_REALTY.eq('Y').mul(1).astype('bool')
 test.to_parquet('raw_data/test.parquet')
+
+print("done")
