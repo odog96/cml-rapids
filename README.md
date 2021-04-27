@@ -22,7 +22,7 @@ The focus of this tutorial will be on the mechanics of leveraging the RAPIDs lib
 To follow along, clone the repo at: https://github.com/Data-drone/cml_rapids.git into a new CML Project. 
 ![New Project From Git](images/CreateProject.png)
 
-In this example we will a Jupyter Notebook session to run our code. Create a session like so:
+In this example we will use a Jupyter Notebook session to run our code. Create a session like so:
 ![RAPIDS Session](images/)
 
 ## Get the Dataset
@@ -41,7 +41,7 @@ Common problems at this stage can be related to GPU versions. RAPIDS is only sup
 
 * TODO - Do we need to create a requirements.txt for installing libs?
 
-The raw data is in a series of CSV files. We will firstly convert this to parquet format. These days, most data lakes exist as object stores full of parquet files
+The raw data is in a series of CSV files. We will firstly convert this to parquet format as most data lakes exist as object stores full of parquet files. Parquet also stores datatypes which makes reading back and processing the files later slightly easier.
 
 Run the `convert_data.py` script. This will open the csvs with correctly data types then save them out as parquet in the `raw_data` folder. 
 ![running_convert_data](images/convert_data.gif)
@@ -81,7 +81,7 @@ else:
 The training of the model
 ![missing_columns](images/Training_Model_Jupyter.gif)
 
-And analysis of the results.
+And analysing the results.
 ![model_analysis](images/Feature_Importances.png)
 
 From our testing, the RAPIDS accelerated pipeline is ~28% faster.
@@ -97,7 +97,7 @@ Open the Comparing_Frameworks.ipynb file to see compare how cudf and pandas comp
     NOTE: The function for engineering the features have been written to be compatible with Pandas and cuDF and can be found in `feature_engineering_2.py` 
 
 The notebook is split into two sections. RAPIDS cuDF and Pandas.
-From our testing, we see the followin in terms of performance:
+From our testing, we see the following in terms of performance:
 
 | Process        | RAPIDS (wall time) | Pandas (wall time)  |
 | ------------- |:-------------:| :-----:|
@@ -122,7 +122,7 @@ With the Home Credit Default Risk Challenge, overfitting is very easy. So we hav
 
 ![KFold_Training](images/KFold_Training.gif)
 
-### Accessing Models
+### Assessing Models
 
 With our model trained, we can have a look at the confusion matrix and auc scores from our model. Again, we use cuml versions so that we don't have to transfer the data back to CPU.
 
