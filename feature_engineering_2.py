@@ -163,3 +163,74 @@ def process_previous_applications(prev, dd, nan_as_category = True):
     del refused, refused_agg, approved, approved_agg, prev
     gc.collect()
     return prev_agg
+
+def pos_cash(pos, dd, nan_as_category = True):
+
+    pos, cat_cols = one_hot_encoder(dd, pos, nan_as_category= True)
+    # Features
+    aggregations = {
+        'MONTHS_BALANCE': ['max', 'mean', 'size'],
+        'SK_DPD': ['max', 'mean'],
+        'SK_DPD_DEF': ['max', 'mean']
+    }
+    for cat in cat_cols:
+        aggregations[cat] = ['mean']
+    
+    pos_agg = pos.groupby('SK_ID_CURR').agg(aggregations)
+    pos_agg.columns = dd.Index(['POS_' + e[0] + "_" + e[1].upper() for e in pos_agg.columns.tolist()])
+    # Count pos cash accounts
+    pos_agg['POS_COUNT'] = pos.groupby('SK_ID_CURR').size()
+    del pos
+    gc.collect()
+    return pos_agg
+
+def installments_payments(ins, dd, nan_as_category = True):
+    ins, cat_cols = one_hot_encoder(dd, ins, nan_as_category=True)
+    # Percentage and difference paid in each installment (amount paid and installment value)
+    ins['PAYMENT_PERC'] = ins['AMT_PAYMENT'] / ins['AMT_INSTALMENT']
+    ins['PAYMENT_DIFF'] = ins['AMT_INSTALMENT'] - ins['AMT_PAYMENT']
+    # Days past due and days before due (no negative values)
+    ins['DPD'] = ins['DAYS_ENTRY_PAYMENT'] - ins['DAYS_INSTALMENT']
+    ins['DBD'] = ins['DAYS_INSTALMENT'] - ins['DAYS_ENTRY_PAYMENT']
+    
+    if type(ins) == cudf.core.dataframe.DataFrame:
+        ins['DPD'] = ins['DPD'].applymap(lambda x: x if x > 0 else 0)
+        ins['DBD'] = ins['DBD'].applymap(lambda x: x if x > 0 else 0)
+    else:
+        ins['DPD'] = ins['DPD'].apply(lambda x: x if x > 0 else 0)
+        ins['DBD'] = ins['DBD'].apply(lambda x: x if x > 0 else 0)
+
+    #prev['DAYS_TERMINATION'].replace(365243, np.nan, inplace= True)
+    
+    # Features: Perform aggregations
+    aggregations = {
+        'NUM_INSTALMENT_VERSION': ['nunique'],
+        'DPD': ['max', 'mean', 'sum'],
+        'DBD': ['max', 'mean', 'sum'],
+        'PAYMENT_PERC': [ 'mean', 'sum', 'var'],
+        'PAYMENT_DIFF': [ 'mean', 'sum', 'var'],
+        'AMT_INSTALMENT': ['max', 'mean', 'sum'],
+        'AMT_PAYMENT': ['min', 'max', 'mean', 'sum'],
+        'DAYS_ENTRY_PAYMENT': ['max', 'mean', 'sum']
+    }
+    for cat in cat_cols:
+        aggregations[cat] = ['mean']
+    ins_agg = ins.groupby('SK_ID_CURR').agg(aggregations)
+    ins_agg.columns = dd.Index(['INSTAL_' + e[0] + "_" + e[1].upper() for e in ins_agg.columns.tolist()])
+    # Count installments accounts
+    ins_agg['INSTAL_COUNT'] = ins.groupby('SK_ID_CURR').size()
+    del ins
+    gc.collect()
+    return ins_agg
+
+def credit_card_balance(cc, dd, nan_as_category = True):
+    cc, cat_cols = one_hot_encoder(dd, cc, nan_as_category= True)
+    # General aggregations
+    cc.drop(['SK_ID_PREV'], axis= 1, inplace = True)
+    cc_agg = cc.groupby('SK_ID_CURR').agg(['min', 'max', 'mean', 'sum', 'var'])
+    cc_agg.columns = dd.Index(['CC_' + e[0] + "_" + e[1].upper() for e in cc_agg.columns.tolist()])
+    # Count credit card lines
+    cc_agg['CC_COUNT'] = cc.groupby('SK_ID_CURR').size()
+    del cc
+    gc.collect()
+    return cc_agg

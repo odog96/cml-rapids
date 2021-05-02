@@ -1,5 +1,13 @@
 import cudf as dd
-from feature_engineering_2 import process_unified, process_bureau_and_balance, process_previous_applications
+from feature_engineering_2 import (
+    pos_cash, process_unified, process_bureau_and_balance, 
+    process_previous_applications, installments_payments,
+    credit_card_balance
+    )
+
+# initiating mem management
+# this allows for spilling out of the gpu ram 
+dd.set_allocator("managed")
 
 ### Load datasets
 print("loading data")
@@ -23,7 +31,23 @@ unified_feat = process_unified(unified, dd)
 
 bureau_agg = process_bureau_and_balance(bureau, bureau_balance, dd)
 
-unified_feat = unified_feat.join(bureau_agg, how='left', on='SK_ID_CURR')
+############################
+
+prev_agg = process_previous_applications(prev, dd)
+pos_agg = pos_cash(pc_balance, dd)
+ins_agg = installments_payments(payments, dd)
+cc_agg = credit_card_balance(cc_balance, dd)
+
+unified_feat = unified_feat.join(bureau_agg, how='left', on='SK_ID_CURR') \
+    .join(prev_agg, how='left', on='SK_ID_CURR') \
+    .join(pos_agg, how='left', on='SK_ID_CURR') \
+    .join(ins_agg, how='left', on='SK_ID_CURR') \
+    .join(cc_agg, how='left', on='SK_ID_CURR')
+
+########################
+
+# basic fallback in case we get way too many columns
+#unified_feat = unified_feat.join(bureau_agg, how='left', on='SK_ID_CURR')
 
 # we can't use bool column types in xgb later on
 bool_columns = [col for col in unified_feat.columns if (unified_feat[col].dtype in ['bool']) ]    
