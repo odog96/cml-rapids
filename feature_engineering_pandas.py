@@ -62,5 +62,5 @@ train_feats = unified_feat.loc[train_index].merge(train_target, how='left',
                                                left_index=True, right_index=True)
 test_feats = unified_feat.loc[test_index]
 
-#train_feats.to_parquet('data_eng/feats/train_feats.parquet')
-#test_feats.to_parquet('data_eng/feats/test_feats.parquet')
+train_feats.to_parquet('data_eng/feats/train_feats.parquet')
+test_feats.to_parquet('data_eng/feats/test_feats.parquet')
