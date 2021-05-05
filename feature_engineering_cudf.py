@@ -53,6 +53,29 @@ unified_feat = unified_feat.join(bureau_agg, how='left', on='SK_ID_CURR') \
 bool_columns = [col for col in unified_feat.columns if (unified_feat[col].dtype in ['bool']) ]    
 unified_feat[bool_columns] = unified_feat[bool_columns].astype('int64')
 
+from sklearn.preprocessing import LabelEncoder
+# label encode cats
+label_encode_dict = {}
+
+categorical = unified_feat.select_dtypes(include=pd.CategoricalDtype).columns 
+for column in categorical:
+    label_encode_dict[column] = LabelEncoder()
+    unified_feat[column] =  label_encode_dict[column].fit_transform(unified_feat[column])
+    unified_feat[column] = unified_feat[column].astype('int64')
+
+### Fix for Int64D
+Int64D = unified_feat.select_dtypes(include=[pd.Int64Dtype]).columns
+unified_feat[Int64D] = unified_feat[Int64D].fillna(0)
+unified_feat[Int64D] = unified_feat[Int64D].astype('int64')
+
+### fix unit8
+uint8 = unified_feat.select_dtypes(include=['uint8']).columns
+unified_feat[uint8] = unified_feat[uint8].astype('int64')
+
+#unified_feat.replace([np.inf, -np.inf], np.nan, inplace=True)
+na_cols = unified_feat.isna().any()[unified_feat.isna().any()==True].index.to_arrow().to_pylist()
+unified_feat[na_cols] = unified_feat[na_cols].fillna(0)
+
 train_feats = unified_feat.loc[train_index].merge(train_target, how='left', 
                                                left_index=True, right_index=True)
 test_feats = unified_feat.loc[test_index]
