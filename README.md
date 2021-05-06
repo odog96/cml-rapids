@@ -90,7 +90,7 @@ From our testing, the RAPIDS accelerated pipeline is ~28% faster.
 Now that we have a feel for how this works, lets look at a more advanced feature engineering pipeline.
 For our simple feature engineering pipeline, we only used the main training table and didn't look at the other tables in the dataset.
 
-For our advanced feature engineering pipeline, we will include some of this auxiliary data and also engineering some additional features.
+For our advanced feature engineering pipeline, we will include the auxiliary data and also engineering some additional features.
 
 Open the Comparing_Frameworks.ipynb file to see compare how cudf and pandas compare.
 
@@ -101,14 +101,11 @@ From our testing, we see the following in terms of performance:
 
 | Process        | RAPIDS (wall time) | Pandas (wall time)  |
 | ------------- |:-------------:| :-----:|
-| Ingest Data      | 1.9 secs | 5.05 secs |
-| Generate Features      | 2.39 secs | 10.3 secs |
-| Write Data | 621 ms | 2.28 secs |
+| Ingest Data      | 2.23 secs | 5.4 secs |
+| Generate Features      | 16.1 secs | 38.1 secs |
+| Write Data | 4.35 secs | 4.35 secs |
 
 We can see that for all parts of the process, RAPIDs offers higher performance than raw Pandas. It is worth noting at this stage, that RAPIDs cuDF can only take advantage of one GPU. Should we wish to scale beyong a single GPU, we will need to leverage `dask_cudf`.
-
-Moving to Dask requires moving to a clustered architecture and refactoring the code to work within the constraints of the dask dataframe. Whilst most Pandas APIs will transfer seamlessly to Dask, there are notable exceptions. See https://docs.dask.org/en/latest/dataframe.html for more information. Given the added complexity we will save this for a future discussion.
-
 ### Modelling
 
 For the advanced modelling section, we will again leverage xgboost as our primary method. To enable GPU Acceleration, we set the `tree_method` to `gpu_hist`. That is really all we need to do to leverage GPU compute!
@@ -128,6 +125,9 @@ With our model trained, we can have a look at the confusion matrix and auc score
 
 ![Results](images/Results.png)
 
+xgboost also features gpu accelerated feature importance calculations and shap calculations for explanability. For a full explanation of shap values see: https://www.kaggle.com/dansbecker/shap-values 
+
+![Shap_values](images/adv_model_explainability.png)
 ### Conclusion
 
 In this post, we have shown how you can leverage NVIDIA RAPIDS in order to accelerate your Machine Learning Projects in Cloudera Machine Learning
