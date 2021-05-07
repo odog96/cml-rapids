@@ -51,6 +51,8 @@ Now we have all our parquet datasets to continue on our RAPIDS journey
 
 Exploring the dataset, there are numerical columns, categorical and boolean columns. The `application_test` and `application_train` files contain the main features that we will be building our model off of whilst the other tables provide some supplementary data. Feel free to skim through: `First_Exploration.ipynb` in order to see some basic exploration of the datasets. 
 
+In the `First_Exploration.ipynb` we also leverage `cuxfilter`, a RAPIDs accelerated graphing library for some of the charts.
+
 ### Simple Exploration and Model
 
 As with all Machine Learning problems, lets start with a simple model. This gives us the opportunity to build a baseline to improve off of and also to check that Machine Learning can learn something off the data right off the bat.
