@@ -1,2 +1,4 @@
 panel
 matplotlib
+pandas
+shap
