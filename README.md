@@ -4,11 +4,11 @@ In this article, we will cover leveraging RAPIDS to accelerate your machine lear
 
 ## Introduction
 
-In the previous blog post in this series, we walked through the steps for leveraging Deep Learning in your Cloudera Machine Learning (CML) projects. As a aprt of our partnership with NVIDA, we now also include a RAPIDS engine which comes preconfigured with all necessary libraries to bring the power of RAPIDS to your projects.
+In the previous blog post in this series, we walked through the steps for leveraging Deep Learning in your Cloudera Machine Learning (CML) projects. This year, we expanded our partnership with NVIDIA, enabling your data teams to dramatically speed up compute processes for data engineering and data science workloads with no code changes using RAPIDS AI. RAPIDS on the Cloudera Data Platform comes pre-configured with all the necessary libraries and dependencies to bring the power of RAPIDS to your projects.
 
 ## What is RAPIDs
 
-Rapids is a series of libraries from NVIDIA that bring the power of GPU compute to standard Data Science operations, be it exploratory data analysis, feature engineering or model building. For more information see: <https://medium.com/rapids-ai>. The RAPIDS libraries are designed as drop in replacements for common Python data science libraries like cudf (pandas), cupy (numpy), cuml (sklearn) and dask_cuda (dask). By leveraging the parallel compute capacity of GPUs the time for complicated data engineering and data science tasks can be dramatically reduced accelerating the timeframes for Data Scientists to take ideas from concept to production.
+RAPIDS brings the power of GPU compute to standard Data Science operations, be it exploratory data analysis, feature engineering or model building. For more information see: <https://rapids.ai/>. The RAPIDS libraries are designed as drop-in replacements for common Python data science libraries like pandas (cuDF), numpy (cuPy), sklearn (cuML) and dask (dask_cuda). By leveraging the parallel compute capacity of GPUs the time for complicated data engineering and data science tasks can be dramatically reduced, accelerating the timeframes for Data Scientists to take ideas from concept to production.
 ## Scenario
 
 In this tutorial, we will illustrate how RAPIDS can be used to tackle the Kaggle Home Credit Default Risk challenge. The Home Credit Default Risk problem is about predicting the chance that a customer will default on a loan, a common financial services industry problem set. To try and predict this, an extensive dataset including anonymised details on the individual loanee and their historical credit history are included. See https://www.kaggle.com/c/home-credit-default-risk/overview for more details.
@@ -25,6 +25,11 @@ To follow along, clone the repo at: https://github.com/Data-drone/cml_rapids.git
 In this example we will use a Jupyter Notebook session to run our code. Create a session like so:
 ![RAPIDS Session](images/)
 
+Install the requirements from a terminal session with:
+```bash
+pip install -r requirements.txt
+```
+
 ## Get the Dataset
 
 For the code to work, the data in it's CSV format should be placed into the data subfolder. The dataset can be downloaded from: https://www.kaggle.com/c/home-credit-default-risk/data
@@ -33,7 +38,7 @@ For the code to work, the data in it's CSV format should be placed into the data
 To validate that our image is working and that RAPIDS is correctly configured, run `testing.py` from a terminal session in jupyterlab.
 ![testing_RAPIDS](images/testing_rapids.gif)
 
-If you do not see the row count appear at the end then there maybe issues with the RAPIDS configuration.
+The script will go through loading RAPIDs libraries then leveraging them to load and processing a datafile.
 
 Common problems at this stage can be related to GPU versions. RAPIDS is only supported on newer NVIDIA gpus. For AWS this means at least P3 instances. P2 GPU instances are not supported.
 ![GPU_error_message](images/old_gpu.png)
@@ -51,7 +56,7 @@ Now we have all our parquet datasets to continue on our RAPIDS journey
 
 Exploring the dataset, there are numerical columns, categorical and boolean columns. The `application_test` and `application_train` files contain the main features that we will be building our model off of whilst the other tables provide some supplementary data. Feel free to skim through: `First_Exploration.ipynb` in order to see some basic exploration of the datasets. 
 
-In the `First_Exploration.ipynb` we also leverage `cuxfilter`, a RAPIDs accelerated graphing library for some of the charts.
+In the `First_Exploration.ipynb` we also leverage `cuXfilter`, a RAPIDS-accelerated cross filtering visualization library for some of the charts.
 
 ### Simple Exploration and Model
 
@@ -103,9 +108,11 @@ From our testing, we see the following in terms of performance:
 
 | Process        | RAPIDS (wall time) | Pandas (wall time)  |
 | ------------- |:-------------:| :-----:|
-| Ingest Data      | 2.23 secs | 5.4 secs |
-| Generate Features      | 16.1 secs | 38.1 secs |
-| Write Data | 4.35 secs | 4.35 secs |
+| Ingest Data      | 5 secs | 9.83 secs |
+| Generate Features      | 21.3 secs | 68.1 secs |
+| Write Data | 5.64 secs | 9.8 secs |
+
+This is based on a P3 Worker with 8 Cores and 16 GB RAM.
 
 We can see that for all parts of the process, RAPIDs offers higher performance than raw Pandas. It is worth noting at this stage, that RAPIDs cuDF can only take advantage of one GPU. Should we wish to scale beyong a single GPU, we will need to leverage `dask_cudf`.
 ### Modelling
