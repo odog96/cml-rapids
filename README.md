@@ -22,8 +22,7 @@ The focus of this tutorial will be on the mechanics of leveraging the RAPIDs lib
 To follow along, clone the repo at: https://github.com/Data-drone/cml_rapids.git into a new CML Project. 
 ![New Project From Git](images/CreateProject.png)
 
-In this example we will use a Jupyter Notebook session to run our code. Create a session like so:
-![RAPIDS Session](images/)
+In this example we will use a Jupyter Notebook session to run our code. Create a session with 8 cores, 16GB memory and 1 GPU
 
 Install the requirements from a terminal session with:
 ```bash
@@ -43,8 +42,6 @@ The script will go through loading RAPIDs libraries then leveraging them to load
 Common problems at this stage can be related to GPU versions. RAPIDS is only supported on newer NVIDIA gpus. For AWS this means at least P3 instances. P2 GPU instances are not supported.
 ![GPU_error_message](images/old_gpu.png)
 ### Data Ingestion
-
-* TODO - Do we need to create a requirements.txt for installing libs?
 
 The raw data is in a series of CSV files. We will firstly convert this to parquet format as most data lakes exist as object stores full of parquet files. Parquet also stores datatypes which makes reading back and processing the files later slightly easier.
 
@@ -137,10 +134,6 @@ With our model trained, we can have a look at the confusion matrix and auc score
 xgboost also features gpu accelerated feature importance calculations and shap calculations for explanability. For a full explanation of shap values see: https://www.kaggle.com/dansbecker/shap-values 
 
 ![Shap_values](images/adv_model_explainability.png)
-### Conclusion
+### Next Steps
 
-In this post, we have shown how you can leverage NVIDIA RAPIDS in order to accelerate your Machine Learning Projects in Cloudera Machine Learning
-
-## TODOS
-
-- can also explore porting to dask-cudf
+The following post is part 3 of the series, GPUs on CML. If you would like to learn more about how you can leverage RAPIDS to accelerate your Machine Learning Projects in Cloudera Machine Learning, be sure to check out part 1<https://blog.cloudera.com/enabling-nvidia-gpus-to-accelerate-model-development-in-cloudera-machine-learning/> & part 2<https://blog.cloudera.com/deep-learning-with-nvidia-gpus-in-cloudera-machine-learning/> of the blog series.
