@@ -23,6 +23,7 @@ To follow along, clone the repo at: https://github.com/Data-drone/cml_rapids.git
 ![New Project From Git](images/CreateProject.png)
 
 In this example we will use a Jupyter Notebook session to run our code. Create a session with 8 cores, 16GB memory and 1 GPU
+![Setup Session](images/setup_session.png)
 
 Install the requirements from a terminal session with:
 ```bash
@@ -105,9 +106,9 @@ From our testing, we see the following in terms of performance:
 
 | Process        | RAPIDS (wall time) | Pandas (wall time)  |
 | ------------- |:-------------:| :-----:|
-| Ingest Data      | 5 secs | 9.83 secs |
-| Generate Features      | 21.3 secs | 68.1 secs |
-| Write Data | 5.64 secs | 9.8 secs |
+| Ingest Data      | 1.17 secs | 9.83 secs |
+| Generate Features      | 8.12 secs | 68.1 secs |
+| Write Data | 4.34 secs | 9.8 secs |
 
 This is based on a P3 Worker with 8 Cores and 16 GB RAM.
 
