@@ -42,6 +42,7 @@ The script will go through loading RAPIDs libraries then leveraging them to load
 
 Common problems at this stage can be related to GPU versions. RAPIDS is only supported on newer NVIDIA gpus. For AWS this means at least P3 instances. P2 GPU instances are not supported.
 ![GPU_error_message](images/old_gpu.png)
+
 ### Data Ingestion
 
 The raw data is in a series of CSV files. We will firstly convert this to parquet format as most data lakes exist as object stores full of parquet files. Parquet also stores datatypes which makes reading back and processing the files later slightly easier.
