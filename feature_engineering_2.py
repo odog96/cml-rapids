@@ -70,7 +70,7 @@ def process_bureau_and_balance(bureau, bureau_balance, dd, nan_as_category = Tru
         bb_aggregations[col] = ['mean']
     bb_agg = bb.groupby('SK_ID_BUREAU').agg(bb_aggregations)
     bb_agg.columns = dd.Index([e[0] + "_" + e[1].upper() for e in bb_agg.columns.tolist()])
-    bureau = bureau.join(bb_agg, how='left', on='SK_ID_BUREAU')
+    bureau = bureau.merge(bb_agg, how='left', on='SK_ID_BUREAU')
     bureau.drop(['SK_ID_BUREAU'], axis=1, inplace= True)
     del bb, bb_agg
     gc.collect()
@@ -105,7 +105,7 @@ def process_bureau_and_balance(bureau, bureau_balance, dd, nan_as_category = Tru
     active = bureau[bureau['CREDIT_ACTIVE_Active'] == 1]
     active_agg = active.groupby('SK_ID_CURR').agg(num_aggregations)
     active_agg.columns = dd.Index(['ACTIVE_' + e[0] + "_" + e[1].upper() for e in active_agg.columns.tolist()])
-    bureau_agg = bureau_agg.join(active_agg, how='left', on='SK_ID_CURR')
+    bureau_agg = bureau_agg.merge(active_agg, how='left', on='SK_ID_CURR')
 
     del active, active_agg
     gc.collect()
@@ -113,7 +113,7 @@ def process_bureau_and_balance(bureau, bureau_balance, dd, nan_as_category = Tru
     closed = bureau[bureau['CREDIT_ACTIVE_Closed'] == 1]
     closed_agg = closed.groupby('SK_ID_CURR').agg(num_aggregations)
     closed_agg.columns = dd.Index(['CLOSED_' + e[0] + "_" + e[1].upper() for e in closed_agg.columns.tolist()])
-    bureau_agg = bureau_agg.join(closed_agg, how='left', on='SK_ID_CURR')
+    bureau_agg = bureau_agg.merge(closed_agg, how='left', on='SK_ID_CURR')
 
     del closed, closed_agg, bureau
     gc.collect()
@@ -154,12 +154,12 @@ def process_previous_applications(prev, dd, nan_as_category = True):
     approved = prev[prev['NAME_CONTRACT_STATUS_Approved'] == 1]
     approved_agg = approved.groupby('SK_ID_CURR').agg(num_aggregations)
     approved_agg.columns = dd.Index(['APPROVED_' + e[0] + "_" + e[1].upper() for e in approved_agg.columns.tolist()])
-    prev_agg = prev_agg.join(approved_agg, how='left', on='SK_ID_CURR')
+    prev_agg = prev_agg.merge(approved_agg, how='left', on='SK_ID_CURR')
     # Previous Applications: Refused Applications - only numerical features
     refused = prev[prev['NAME_CONTRACT_STATUS_Refused'] == 1]
     refused_agg = refused.groupby('SK_ID_CURR').agg(num_aggregations)
     refused_agg.columns = dd.Index(['REFUSED_' + e[0] + "_" + e[1].upper() for e in refused_agg.columns.tolist()])
-    prev_agg = prev_agg.join(refused_agg, how='left', on='SK_ID_CURR')
+    prev_agg = prev_agg.merge(refused_agg, how='left', on='SK_ID_CURR')
     del refused, refused_agg, approved, approved_agg, prev
     gc.collect()
     return prev_agg
@@ -194,8 +194,8 @@ def installments_payments(ins, dd, nan_as_category = True):
     ins['DBD'] = ins['DAYS_INSTALMENT'] - ins['DAYS_ENTRY_PAYMENT']
     
     if type(ins) == cudf.core.dataframe.DataFrame:
-        ins['DPD'] = ins['DPD'].applymap(lambda x: x if x > 0 else 0)
-        ins['DBD'] = ins['DBD'].applymap(lambda x: x if x > 0 else 0)
+        ins['DPD'] = ins['DPD'].apply(lambda x: x if x > 0 else 0)
+        ins['DBD'] = ins['DBD'].apply(lambda x: x if x > 0 else 0)
     else:
         ins['DPD'] = ins['DPD'].apply(lambda x: x if x > 0 else 0)
         ins['DBD'] = ins['DBD'].apply(lambda x: x if x > 0 else 0)
@@ -227,6 +227,12 @@ def credit_card_balance(cc, dd, nan_as_category = True):
     cc, cat_cols = one_hot_encoder(dd, cc, nan_as_category= True)
     # General aggregations
     cc.drop(['SK_ID_PREV'], axis= 1, inplace = True)
+    # Identify categorical columns
+    categorical_columns = cc.select_dtypes(include='category').columns
+
+    # Drop categorical columns
+    cc.drop(categorical_columns, axis=1, inplace = True)
+
     cc_agg = cc.groupby('SK_ID_CURR').agg(['min', 'max', 'mean', 'sum', 'var'])
     cc_agg.columns = dd.Index(['CC_' + e[0] + "_" + e[1].upper() for e in cc_agg.columns.tolist()])
     # Count credit card lines
