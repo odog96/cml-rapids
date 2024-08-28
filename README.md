@@ -4,14 +4,15 @@ In this article, we will cover leveraging RAPIDS to accelerate your machine lear
 
 ## Introduction
 
-In the previous blog post in this series, we walked through the steps for leveraging Deep Learning in your Cloudera Machine Learning (CML) projects. This year, we expanded our partnership with NVIDIA, enabling your data teams to dramatically speed up compute processes for data engineering and data science workloads with no code changes using RAPIDS AI. RAPIDS on the Cloudera Data Platform comes pre-configured with all the necessary libraries and dependencies to bring the power of RAPIDS to your projects.
+We expanded our partnership with NVIDIA, enabling your data teams to dramatically speed up compute processes for data engineering and data science workloads with no code changes using RAPIDS AI. RAPIDS on the Cloudera Data Platform comes pre-configured with all the necessary libraries and dependencies to bring the power of RAPIDS to your projects.
 
 ## What is RAPIDs
 
 RAPIDS brings the power of GPU compute to standard Data Science operations, be it exploratory data analysis, feature engineering or model building. For more information see: <https://rapids.ai/>. The RAPIDS libraries are designed as drop-in replacements for common Python data science libraries like pandas (cuDF), numpy (cuPy), sklearn (cuML) and dask (dask_cuda). By leveraging the parallel compute capacity of GPUs the time for complicated data engineering and data science tasks can be dramatically reduced, accelerating the timeframes for Data Scientists to take ideas from concept to production.
+
 ## Scenario
 
-In this tutorial, we will illustrate how RAPIDS can be used to tackle the Kaggle Home Credit Default Risk challenge. The Home Credit Default Risk problem is about predicting the chance that a customer will default on a loan, a common financial services industry problem set. To try and predict this, an extensive dataset including anonymised details on the individual loanee and their historical credit history are included. See https://www.kaggle.com/c/home-credit-default-risk/overview for more details.
+In this tutorial, we will illustrate how RAPIDS can be used to tackle the Kaggle Home Credit Default Risk challenge. The Home Credit Default Risk problem is about predicting the chance that a customer will default on a loan, a common financial services industry problem set. To try and predict this, an extensive dataset including anonymised details on the individual loan and their historical credit history are included. See https://www.kaggle.com/c/home-credit-default-risk/overview for more details.
 
 As a machine learning problem, it is a classification task with tabular data, a perfect fit for RAPIDs.
 
@@ -19,7 +20,7 @@ The focus of this tutorial will be on the mechanics of leveraging the RAPIDs lib
 
 ## Project Setup
 
-To follow along, clone the repo at: https://github.com/Data-drone/cml_rapids.git into a new CML Project. 
+To follow along, clone the repo at: https://github.com/faraz-mirza/cml-rapids.git into a new CML Project. 
 ![New Project From Git](images/CreateProject.png)
 
 In this example we will use a Jupyter Notebook session to run our code. Create a session with 8 cores, 16GB memory and 1 GPU
@@ -113,10 +114,10 @@ From our testing, we see the following in terms of performance:
 
 This is based on a P3 Worker with 8 Cores and 16 GB RAM.
 
-We can see that for all parts of the process, RAPIDs offers higher performance than raw Pandas. It is worth noting at this stage, that RAPIDs cuDF can only take advantage of one GPU. Should we wish to scale beyong a single GPU, we will need to leverage `dask_cudf`.
+We can see that for all parts of the process, RAPIDs offers higher performance than raw Pandas. It is worth noting at this stage, that RAPIDs cuDF can only take advantage of one GPU. Should we wish to scale beyond a single GPU, we will need to leverage `dask_cudf`.
 ### Modelling
 
-For the advanced modelling section, we will again leverage xgboost as our primary method. To enable GPU Acceleration, we set the `tree_method` to `gpu_hist`. That is really all we need to do to leverage GPU compute!
+For the advanced modelling section, we will again leverage xgboost as our primary method.
 
 ![gpu_hist](images/gpu_hist.png)
 
@@ -138,4 +139,4 @@ xgboost also features gpu accelerated feature importance calculations and shap c
 ![Shap_values](images/adv_model_explainability.png)
 ### Next Steps
 
-The following post is part 3 of the series, GPUs on CML. If you would like to learn more about how you can leverage RAPIDS to accelerate your Machine Learning Projects in Cloudera Machine Learning, be sure to check out part 1<https://blog.cloudera.com/enabling-nvidia-gpus-to-accelerate-model-development-in-cloudera-machine-learning/> & part 2<https://blog.cloudera.com/deep-learning-with-nvidia-gpus-in-cloudera-machine-learning/> of the blog series.
+If you would like to learn more about how you can leverage RAPIDS to accelerate your Machine Learning Projects in Cloudera Machine Learning, be sure to check out part 1<https://blog.cloudera.com/enabling-nvidia-gpus-to-accelerate-model-development-in-cloudera-machine-learning/> & part 2<https://blog.cloudera.com/deep-learning-with-nvidia-gpus-in-cloudera-machine-learning/> of the blog series.
