@@ -1,0 +1,43 @@
+name: Rapids on CML
+description: "Rapids on CML"
+author: "Cloudera"
+date: "2024-09-11"
+specification_version: 1.0
+prototype_version: 1.0
+environment_variables:
+
+runtimes: 
+  - editor: JupyterLab
+    kernel: Python 3.10
+    edition: Nvidia GPU
+
+tasks:
+  - type: run_session
+    name: Install Dependencies
+    script: install-dependencies.py
+    short_summary: Install Dependencies
+    kernel: python3
+    cpu: 2
+    memory: 12
+
+  - type: create_job
+    name: Loading Data
+    entity_label: get_preds
+    script: testing.py
+    arguments: None
+    short_summary: loads libraries and reads data
+    cpu: 2
+    memory: 4
+    environment:
+      TASK_TYPE: CREATE/RUN_JOB
+      
+  - type: create_job
+    name: Convert to Parquet
+    entity_label: convert_data
+    script: convert_data.py
+    arguments: None
+    short_summary: Convert data files to Parquet
+    cpu: 2
+    memory: 4
+    environment:
+      TASK_TYPE: CREATE
