@@ -29,7 +29,8 @@ tasks:
     cpu: 2
     memory: 4
     environment:
-      TASK_TYPE: CREATE/RUN_JOB
+      TASK_TYPE: CREATE
+      #/RUN_JOB
       
   - type: create_job
     name: Convert to Parquet
