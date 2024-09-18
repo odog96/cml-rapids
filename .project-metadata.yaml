@@ -26,8 +26,9 @@ tasks:
     script: testing.py
     arguments: None
     short_summary: loads libraries and reads data
-    cpu: 2
-    memory: 4
+    cpu: 8
+    memory: 16
+    gpu: 1
     environment:
       TASK_TYPE: CREATE
       #/RUN_JOB
@@ -38,7 +39,8 @@ tasks:
     script: convert_data.py
     arguments: None
     short_summary: Convert data files to Parquet
-    cpu: 2
-    memory: 4
+    cpu: 8
+    memory: 16
+    gpu: 1
     environment:
       TASK_TYPE: CREATE
