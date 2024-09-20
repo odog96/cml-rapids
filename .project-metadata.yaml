@@ -21,8 +21,8 @@ tasks:
     memory: 12
 
   - type: create_job
-    name: Loading Data
-    entity_label: get_preds
+    name: Testing
+    entity_label: testing data load
     script: testing.py
     arguments: None
     short_summary: loads libraries and reads data
