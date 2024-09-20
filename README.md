@@ -23,33 +23,35 @@ The focus of this tutorial will be on the mechanics of leveraging the RAPIDs lib
 To follow along, clone the repo at: https://github.com/faraz-mirza/cml-rapids.git into a new CML Project. 
 ![New Project From Git](images/CreateProject.png)
 
-In this example we will use a Jupyter Notebook session to run our code. Create a session with 8 cores, 16GB memory and 1 GPU
+In the next screen you'll be prompted to review the runtime details. Review, then click "Launch Project". CML will identify a yaml file that will conduct the build steps including install dependencies as well as building jobs used in the lab.
+
+In this example we will use a Jupyter Notebook session to run our code. 
+Create a session with 8 cores, 16GB memory and 1 GPU. Before you do so, check to make sure that this resource profile exists. If not, created it. You can check by going to site administration, run times, then scroll down the resource profiles section.
+
+![Setup Session](images/resouce-profile.png)
+
 ![Setup Session](images/setup_session.png)
 
-Install the requirements from a terminal session with:
-```bash
-pip install -r requirements.txt
-```
 
 ## Get the Dataset
 
 For the code to work, the data in it's CSV format should be placed into the data subfolder. The dataset can be downloaded from: https://www.kaggle.com/c/home-credit-default-risk/data
 ![data_subfolder](images/data_folder.png)
 
-To validate that our image is working and that RAPIDS is correctly configured, run `testing.py` from a terminal session in jupyterlab.
-![testing_RAPIDS](images/testing_rapids.gif)
+To validate that our image is working and that RAPIDS is correctly configured, run the job called `Testing` from a terminal session in jupyterlab.
+![testing_RAPIDS](images/testing-job.png)
 
 The script will go through loading RAPIDs libraries then leveraging them to load and processing a datafile.
 
 Common problems at this stage can be related to GPU versions. RAPIDS is only supported on newer NVIDIA gpus. For AWS this means at least P3 instances. P2 GPU instances are not supported.
-![GPU_error_message](images/old_gpu.png)
+
 
 ### Data Ingestion
 
 The raw data is in a series of CSV files. We will firstly convert this to parquet format as most data lakes exist as object stores full of parquet files. Parquet also stores datatypes which makes reading back and processing the files later slightly easier.
 
-Run the `convert_data.py` script. This will open the csvs with correctly data types then save them out as parquet in the `raw_data` folder. 
-![running_convert_data](images/convert_data.gif)
+Run the `Convert to Parquet` job. This will open the csvs with correctly data types then save them out as parquet in the `raw_data` folder. 
+![running_convert_data](images/convert-data-job.png)
 
 Now we have all our parquet datasets to continue on our RAPIDS journey
 ![folder_structure_afterwards](images/processed_data.png)
