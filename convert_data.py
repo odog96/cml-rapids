@@ -91,9 +91,16 @@ train.FLAG_OWN_CAR = train.FLAG_OWN_CAR.eq('Y').mul(1).astype('bool')
 train.FLAG_OWN_REALTY = train.FLAG_OWN_REALTY.eq('Y').mul(1).astype('bool')
 train.to_parquet('raw_data/train.parquet')
 
-test = dd.read_csv('data/application_test.csv',
-                    index_col='SK_ID_CURR',
-                    dtype=train_test_dtype_dict)
+# test = dd.read_csv('data/application_test.csv',
+#                     index_col='SK_ID_CURR',
+#                     dtype=train_test_dtype_dict)
+
+# Read the CSV without specifying dtypes
+test = dd.read_csv('data/application_test.csv', index_col='SK_ID_CURR')
+
+# Bulk convert columns using train_test_dtype_dict
+for col, dtype in train_test_dtype_dict.items():
+    test[col] = test[col].astype(dtype)
 
 
 test.FLAG_OWN_CAR = test.FLAG_OWN_CAR.eq('Y').mul(1).astype('bool')

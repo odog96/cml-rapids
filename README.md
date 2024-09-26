@@ -88,7 +88,7 @@ else:
 ```
 
 The training of the model
-![missing_columns](images/Training_Model_Jupyter.gif)
+![missing_columns](images/Training_Model_Jupyter.png)
 
 And analysing the results.
 ![model_analysis](images/Feature_Importances.png)
@@ -110,35 +110,14 @@ From our testing, we see the following in terms of performance:
 
 | Process        | RAPIDS (wall time) | Pandas (wall time)  |
 | ------------- |:-------------:| :-----:|
-| Ingest Data      | 1.17 secs | 9.83 secs |
-| Generate Features      | 8.12 secs | 68.1 secs |
-| Write Data | 4.34 secs | 9.8 secs |
+| Ingest Data      | 2.62 secs | 4.94 secs |
+| Generate Features      | 25.1 secs | 76.1 secs |
+| Write Data | 4.94 secs | 9.52 secs |
 
 This is based on a P3 Worker with 8 Cores and 16 GB RAM.
 
 We can see that for all parts of the process, RAPIDs offers higher performance than raw Pandas. It is worth noting at this stage, that RAPIDs cuDF can only take advantage of one GPU. Should we wish to scale beyond a single GPU, we will need to leverage `dask_cudf`.
-### Modelling
 
-For the advanced modelling section, we will again leverage xgboost as our primary method.
-
-![gpu_hist](images/gpu_hist.png)
-
-
-With the Home Credit Default Risk Challenge, overfitting is very easy. So we have included a cross validation step here. In order to use `train_test_split` with RAPIDS cudf frames, we use the `cuml` version instead. cuML, however, doesn't have `StratifiedKFold` sampling so we will use the `sklearn` version.
-
-`StratifiedKFold` isn't very computationally expensive however so it doesn't matter that we aren't running this on GPU. The resulting indexes can also be used directly with cudf dataframes via `iloc` as per normal.
-
-![KFold_Training](images/KFold_Training.gif)
-
-### Assessing Models
-
-With our model trained, we can have a look at the confusion matrix and auc scores from our model. Again, we use cuml versions so that we don't have to transfer the data back to CPU.
-
-![Results](images/Results.png)
-
-xgboost also features gpu accelerated feature importance calculations and shap calculations for explanability. For a full explanation of shap values see: https://www.kaggle.com/dansbecker/shap-values 
-
-![Shap_values](images/adv_model_explainability.png)
 ### Next Steps
 
 If you would like to learn more about how you can leverage RAPIDS to accelerate your Machine Learning Projects in Cloudera Machine Learning, be sure to check out part 1<https://blog.cloudera.com/enabling-nvidia-gpus-to-accelerate-model-development-in-cloudera-machine-learning/> & part 2<https://blog.cloudera.com/deep-learning-with-nvidia-gpus-in-cloudera-machine-learning/> of the blog series.
