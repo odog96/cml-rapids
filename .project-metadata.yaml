@@ -4,7 +4,7 @@ author: "Cloudera"
 date: "2024-09-11"
 specification_version: 1.0
 prototype_version: 1.0
-environment_variables:
+#environment_variables:
 
 runtimes: 
   - editor: JupyterLab
@@ -16,31 +16,31 @@ tasks:
     name: Install Dependencies
     script: install-dependencies.py
     short_summary: Install Dependencies
-    kernel: python3
+    kernel: Python 3.10
     cpu: 2
     memory: 12
 
-  # - type: create_job
-  #   name: Testing
-  #   entity_label: testing data load
-  #   script: testing.py
-  #   arguments: None
-  #   short_summary: loads libraries and reads data
-  #   cpu: 8
-  #   memory: 16
-  #   gpu: 1
-  #   environment:
-  #     TASK_TYPE: CREATE
-  #     #/RUN_JOB
+  - type: create_job
+    name: Testing
+    entity_label: testing data load
+    script: testing.py
+    arguments: None
+    short_summary: loads libraries and reads data
+    cpu: 8
+    memory: 16
+    gpu: 1
+    environment:
+      TASK_TYPE: CREATE
+      #/RUN_JOB
       
-  # - type: create_job
-  #   name: Convert to Parquet
-  #   entity_label: convert_data
-  #   script: convert_data.py
-  #   arguments: None
-  #   short_summary: Convert data files to Parquet
-  #   cpu: 8
-  #   memory: 16
-  #   gpu: 1
-  #   environment:
-  #     TASK_TYPE: CREATE
+  - type: create_job
+    name: Convert to Parquet
+    entity_label: convert_data
+    script: convert_data.py
+    arguments: None
+    short_summary: Convert data files to Parquet
+    cpu: 8
+    memory: 16
+    gpu: 1
+    environment:
+      TASK_TYPE: CREATE
