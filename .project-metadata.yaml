@@ -5,12 +5,12 @@ date: "2024-10-24"
 specification_version: 1.0
 prototype_version: 1.0
 environment_variables:
-  # AWS_ACCESS_KEY_ID:
-  #   default: ""
-  #   description: "Access key ID for interacting with AWS Bedrock"
-  # AWS_SECRET_ACCESS_KEY:
-  #   default: ""
-  #   description: "Secret ket for interacting with AWS Bedrock"
+  AWS_ACCESS_KEY_ID:
+    default: ""
+    description: "Access key ID for interacting with AWS Bedrock"
+  AWS_SECRET_ACCESS_KEY:
+    default: ""
+    description: "Secret ket for interacting with AWS Bedrock"
   AWS_DEFAULT_REGION:
     default: "us-east-1"
     description: "AWS Region where Bedrock models are available"
