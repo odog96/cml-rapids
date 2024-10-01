@@ -1,5 +1,5 @@
 name: Rapids CML
-description: "Hands on Lab which demonstrates a number of concepts including web scraping, vector databases, model deployment, model usage, Langchain, application building, and instruction following/tuning."
+description: "Hands on Lab Rapids."
 author: "Cloudera"
 date: "2023-12-20"
 specification_version: 1.0
