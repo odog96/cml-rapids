@@ -1,7 +1,7 @@
-name: LLM Hands on Lab with CML
-description: "Hands on Lab which demonstrates a number of concepts including web scraping, vector databases, model deployment, model usage, Langchain, application building, and instruction following/tuning."
+name: Rapids on CML
+description: "Rapids on CML"
 author: "Cloudera"
-date: "2023-12-20"
+date: "2024-10-24"
 specification_version: 1.0
 prototype_version: 1.0
 environment_variables:
@@ -14,21 +14,21 @@ environment_variables:
   AWS_DEFAULT_REGION:
     default: "us-east-1"
     description: "AWS Region where Bedrock models are available"
-  PINECONE_API_KEY:
-    default: ""
-    description: "API Keys for Pinecone service"
-  PINECONE_REGION:
-    default: "us-east-1"
-    description: "Cloud Region within Pinecone service"
-  PINECONE_INDEX:
-    default: ""
-    description: "Index within Pinecone Environment"
+  # PINECONE_API_KEY:
+  #   default: ""
+  #   description: "API Keys for Pinecone service"
+  # PINECONE_REGION:
+  #   default: "us-east-1"
+  #   description: "Cloud Region within Pinecone service"
+  # PINECONE_INDEX:
+  #   default: ""
+  #   description: "Index within Pinecone Environment"
 
 runtimes: 
   - editor: JupyterLab
     kernel: Python 3.10
     edition: Nvidia GPU
-    version: 2024.02
+    version: 2024.05
   
 tasks:
   - type: run_session
@@ -63,27 +63,27 @@ tasks:
 #     cpu: 2
 #     memory: 12
 
-#   - type: create_job
-#     name: Testing
-#     entity_label: testing data load
-#     script: testing.py
-#     arguments: None
-#     short_summary: loads libraries and reads data
-#     cpu: 8
-#     memory: 16
-#     gpu: 1
-#     environment:
-#       TASK_TYPE: CREATE
-#       #/RUN_JOB
+  - type: create_job
+    name: Testing
+    entity_label: testing data load
+    script: testing.py
+    arguments: None
+    short_summary: loads libraries and reads data
+    cpu: 8
+    memory: 16
+    gpu: 1
+    environment:
+      TASK_TYPE: CREATE
+      #/RUN_JOB
       
-#   - type: create_job
-#     name: Convert to Parquet
-#     entity_label: convert_data
-#     script: convert_data.py
-#     arguments: None
-#     short_summary: Convert data files to Parquet
-#     cpu: 8
-#     memory: 16
-#     gpu: 1
-#     environment:
-#       TASK_TYPE: CREATE
+  - type: create_job
+    name: Convert to Parquet
+    entity_label: convert_data
+    script: convert_data.py
+    arguments: None
+    short_summary: Convert data files to Parquet
+    cpu: 8
+    memory: 16
+    gpu: 1
+    environment:
+      TASK_TYPE: CREATE
