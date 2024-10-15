@@ -40,9 +40,9 @@ tasks:
     memory: 12
   - type: create_job
     name: Testing
-    entity_label: testing data load
+    #entity_label: testing data load
     script: testing.py
-    arguments: None
+    #arguments: None
     short_summary: loads libraries and reads data
     cpu: 8
     memory: 16
