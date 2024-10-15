@@ -39,7 +39,7 @@ tasks:
     cpu: 2
     memory: 12
   - type: create_job
-    name: populate pinecone
+    name: test-loading-data
     entity_label: load_pinecone
     script: testing.py
     arguments: None
