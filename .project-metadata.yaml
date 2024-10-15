@@ -39,16 +39,26 @@ tasks:
     cpu: 2
     memory: 12
   - type: create_job
-    name: Testing
-    #entity_label: testing data load
-    script: testing.py
-    #arguments: None
-    short_summary: loads libraries and reads data
-    cpu: 8
-    memory: 16
-    #gpu: 1
+    name: populate pinecone
+    entity_label: load_pinecone
+    script: 2_populate_vector_db/pinecone_vectordb_insert.py
+    arguments: None
+    short_summary: load knowledgebase to to pinecone
+    cpu: 2
+    memory: 4
     environment:
       TASK_TYPE: CREATE
+  # - type: create_job
+  #   name: Testing
+  #   #entity_label: testing data load
+  #   script: testing.py
+  #   #arguments: None
+  #   short_summary: loads libraries and reads data
+  #   cpu: 8
+  #   memory: 16
+  #   #gpu: 1
+  #   environment:
+  #     TASK_TYPE: CREATE
 # end of test
 
 # name: Rapids on CML
