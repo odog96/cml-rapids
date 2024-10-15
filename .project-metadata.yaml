@@ -40,7 +40,7 @@ tasks:
     memory: 12
   - type: create_job
     name: test-loading-data
-    entity_label: load_pinecone
+    entity_label: test_load_data
     script: testing.py
     arguments: None
     short_summary: load knowledgebase to to pinecone
