@@ -39,11 +39,11 @@ tasks:
     cpu: 2
     memory: 12
   - type: create_job
-    name: test loading
-    entity_label: test_loading data
+    name: populate pinecone
+    entity_label: load_pinecone
     script: testing.py
     arguments: None
-    short_summary: test loading data
+    short_summary: load knowledgebase to to pinecone
     cpu: 2
     memory: 4
     environment:
