@@ -44,8 +44,8 @@ tasks:
     script: testing.py
     arguments: None
     short_summary: testing simple data load
-    cpu: 2
-    memory: 4
+    cpu: 8
+    memory: 16
     environment:
       TASK_TYPE: CREATE
   # - type: create_job
