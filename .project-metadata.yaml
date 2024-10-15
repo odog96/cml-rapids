@@ -38,17 +38,17 @@ tasks:
     kernel: python3
     cpu: 2
     memory: 12
-  # - type: create_job
-  #   name: Testing
-  #   entity_label: testing data load
-  #   script: testing.py
-  #   arguments: None
-  #   short_summary: loads libraries and reads data
-  #   cpu: 8
-  #   memory: 16
-  #   gpu: 1
-  #   environment:
-  #     TASK_TYPE: CREATE
+  - type: create_job
+    name: Testing
+    entity_label: testing data load
+    script: testing.py
+    arguments: None
+    short_summary: loads libraries and reads data
+    cpu: 8
+    memory: 16
+    #gpu: 1
+    environment:
+      TASK_TYPE: CREATE
 # end of test
 
 # name: Rapids on CML
