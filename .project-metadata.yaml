@@ -43,7 +43,7 @@ tasks:
     entity_label: test_load_data
     script: testing.py
     arguments: None
-    short_summary: load knowledgebase to to pinecone
+    short_summary: testing simple data load
     cpu: 2
     memory: 4
     environment:
