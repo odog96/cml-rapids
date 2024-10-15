@@ -46,6 +46,7 @@ tasks:
     short_summary: testing simple data load
     cpu: 8
     memory: 16
+    gpu: 1
     environment:
       TASK_TYPE: CREATE
   # - type: create_job
