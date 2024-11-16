@@ -36,6 +36,9 @@ Create a session with 8 cores, 16GB memory and 1 GPU. Before you do so, check to
 ## Get the Dataset
 
 For the code to work, the data in it's CSV format should be placed into the data subfolder. The dataset can be downloaded from: https://www.kaggle.com/c/home-credit-default-risk/data
+
+![data_subfolder](images/download-kaggle-data.png)
+
 ![data_subfolder](images/data_folder.png)
 
 To validate that our image is working and that RAPIDS is correctly configured, run the job called `Testing` from a terminal session in jupyterlab.
