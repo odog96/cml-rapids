@@ -16,8 +16,9 @@ tasks:
     script: install-dependencies.py
     short_summary: Install Dependencies
     kernel: python3
-    cpu: 2
-    memory: 12
+    cpu: 8
+    memory: 16
+    gpu: 1
   - type: create_job
     name: test-loading-data
     entity_label: test_load_data
