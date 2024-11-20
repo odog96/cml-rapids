@@ -4,31 +4,44 @@ In this article, we will cover leveraging RAPIDS to accelerate your machine lear
 
 ## Introduction
 
-We expanded our partnership with NVIDIA, enabling your data teams to dramatically speed up compute processes for data engineering and data science workloads with no code changes using RAPIDS AI. RAPIDS on the Cloudera Data Platform comes pre-configured with all the necessary libraries and dependencies to bring the power of RAPIDS to your projects.
+We've expanded our NVIDIA partnership to accelerate your data workflows using RAPIDS AI on the Cloudera Data Platform. Your data teams can now dramatically speed up their data engineering and science workloads - with zero code changes required. The platform comes pre-configured with all essential RAPIDS libraries and dependencies.
 
 ## What is RAPIDs
 
-RAPIDS brings the power of GPU compute to standard Data Science operations, be it exploratory data analysis, feature engineering or model building. For more information see: <https://rapids.ai/>. The RAPIDS libraries are designed as drop-in replacements for common Python data science libraries like pandas (cuDF), numpy (cuPy), sklearn (cuML) and dask (dask_cuda). By leveraging the parallel compute capacity of GPUs the time for complicated data engineering and data science tasks can be dramatically reduced, accelerating the timeframes for Data Scientists to take ideas from concept to production.
+RAPIDS brings the power of GPU compute to standard Data Science operations, be it exploratory data analysis, feature engineering or model building. For more information see: <https://rapids.ai/>. RAPIDS supercharges data science operations with GPU computing power. It provides GPU-accelerated alternatives to popular Python libraries:
+
+- pandas → cuDF
+- numpy → cuPy
+- scikit-learn → cuML
+- dask → dask_cuda
+
+By harnessing GPU parallel processing, RAPIDS significantly reduces processing time for complex data tasks. This acceleration helps data scientists move from concept to production faster than ever before.
 
 ## Scenario
 
-In this tutorial, we will illustrate how RAPIDS can be used to tackle the Kaggle Home Credit Default Risk challenge. The Home Credit Default Risk problem is about predicting the chance that a customer will default on a loan, a common financial services industry problem set. To try and predict this, an extensive dataset including anonymised details on the individual loan and their historical credit history are included. See https://www.kaggle.com/c/home-credit-default-risk/overview for more details.
+In this tutorial, we'll explore how RAPIDS accelerates solving the Kaggle Home Credit Default Risk challenge (https://www.kaggle.com/c/home-credit-default-risk/overview). This classification problem aims to predict customer loan defaults using anonymized loan data and credit histories - a common challenge in financial services. With its tabular data structure, this project is ideally suited for RAPIDS' GPU-accelerated processing capabilities.
 
-As a machine learning problem, it is a classification task with tabular data, a perfect fit for RAPIDs.
-
-The focus of this tutorial will be on the mechanics of leveraging the RAPIDs library and not on building the best performing model for the leaderboard. To see more information on the winning submission See: https://www.kaggle.com/c/home-credit-default-risk/discussion/64821
+# Steps
+- [Project Setup](#project-setup)
+- [Setup Resource Profile](#setup-resource-profile)
+- [Start a Session](#start-a-session)
+- [Get the Dataset](#get-the-dataset)
 
 ## Project Setup
 
-To follow along, clone the repo at: https://github.com/faraz-mirza/cml-rapids.git into a new CML Project. 
+To follow along, clone the repo at: https://github.com/faraz-mirza/cml-rapids.git into a new CML Project. See instructions below:
+
 ![New Project From Git](images/CreateProject.png)
 
 In the next screen you'll be prompted to review the runtime details. Review, then click "Launch Project". CML will identify a yaml file that will conduct the build steps including install dependencies as well as building jobs used in the lab.
 
-In this example we will use a Jupyter Notebook session to run our code. 
-Create a session with 8 cores, 16GB memory and 1 GPU. Before you do so, check to make sure that this resource profile exists. If not, created it. You can check by going to site administration, run times, then scroll down the resource profiles section.
+## Setup Resource Profile
+In this example we will use a Jupyter Notebook session to run our code. Create a session with 8 cores, 16GB memory and 1 GPU. Before you do so, check to make sure that this resource profile exists. If not, created it. You can check by going to site administration, run times, then scroll down the resource profiles section.
 
 ![Setup Session](images/resouce-profile.png)
+
+## Start a Session
+Now you should be able to start a session with the desired profile. To start a session, go back into your project, click on "sessions" and start a new session with the selections below:
 
 ![Setup Session](images/setup_session.png)
 
