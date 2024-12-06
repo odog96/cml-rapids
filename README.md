@@ -76,46 +76,39 @@ Exploring the dataset, there are numerical columns, categorical and boolean colu
 
 In the `First_Exploration.ipynb` we also leverage `cuXfilter`, a RAPIDS-accelerated cross filtering visualization library for some of the charts.
 
-### Simple Exploration and Model
+### Building our first model
 
-As with all Machine Learning problems, lets start with a simple model. This gives us the opportunity to build a baseline to improve off of and also to check that Machine Learning can learn something off the data right off the bat.
+We'll now see a comparison of using Rapids vs Pandas that incorporates normal steps for model building: 
+
+- Data Loading
+- Data Processing
+- Model Training
+- Model Evaluation
 
 Open `A_First_Model.ipynb`
 
-At the start of this notebook, you can choose which set of libraries to load.
-The RAPIDs set or the Pandas set. Just run one of these cells.
-![choose_which_set](images/Choose_version.gif)
+To start off, we create a decorator function that will be used with the varios steps of our model building compartive speed of GPU vs CPU.
+![choose_which_set](images/decorator.png)
 
-This notebook goes through loading just the train and test datasets
-![train_test_cell](images/load_data.png)
+The read the data to observe the load time for each library set. Not too much of a difference in loading speeds.
+![train_test_cell](images/data-read.png)
 
-Some simple filtering out of columns with a lot of missing values
-![missing_columns](images/Check_Missing.gif)
+For training, we're going to run the same xgboost model training steps with each library:
+![model_trianing](images/model-train-cpu.png)
 
-It is worth noting that although RAPIDS `cudf` is mostly a drop in replacement for `pandas`, we do need to change some parts to make it work seamlessly.
+![model_trianing](images/model-train-gpu.png)
 
-```python
-if type(df_app_train_miss_values) == cudf.core.dataframe.DataFrame:
-    drop_columns = df_app_train_miss_values[df_app_train_miss_values['missing percent'] \
-                                        >= 40]['columns'].to_arrow().to_pylist()
-else:
-    drop_columns = df_app_train_miss_values[df_app_train_miss_values['missing percent'] \
-                                        >= 40]['columns'].tolist()
-```
 
-The training of the model
-![missing_columns](images/Training_Model_Jupyter.png)
+Finally we can see the time it took for the various steps - preprocessing, training, and prediction. We can see that in each step using the GPU with Rapids provided an improvement. In the case of training, we see a reduction of nearly 70 %. 
 
-And analysing the results.
-![model_analysis](images/Feature_Importances.png)
+![model_analysis](images/Analysis-results.png)
 
-From our testing, the RAPIDS accelerated pipeline is ~28% faster.
 ### Feature Engineering
 
 Now that we have a feel for how this works, lets look at a more advanced feature engineering pipeline.
 For our simple feature engineering pipeline, we only used the main training table and didn't look at the other tables in the dataset.
 
-For our advanced feature engineering pipeline, we will include the auxiliary data and also engineering some additional features.
+For our advanced feature engineering pipeline, we will include the auxiliary data enginee additional features.
 
 Open the Comparing_Frameworks.ipynb file to see compare how cudf and pandas compare.
 
